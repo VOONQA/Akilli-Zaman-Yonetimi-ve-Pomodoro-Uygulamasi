@@ -3,7 +3,7 @@ import { StyleSheet } from 'react-native';
 import { AppNavigator } from './navigation/AppNavigator';
 import { useDatabase } from './context/DatabaseContext';
 import LoadingScreen from './components/common/LoadingScreen';
-
+///
 // Geçici olarak burada tanımlıyoruz, aslında services/database.ts'de olacak
 const initializeTables = async (db: any) => {
   console.log('Tablolar başlatılıyor...');

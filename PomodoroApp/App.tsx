@@ -9,7 +9,7 @@ import { TaskProvider } from './src/context/TaskContext';
 import { TimerProvider } from './src/context/TimerContext';
 import { SettingsProvider } from './src/context/SettingsContext';
 import { theme } from './src/constants/theme';
-
+///
 export default function App() {
   return (
     <SafeAreaProvider>
