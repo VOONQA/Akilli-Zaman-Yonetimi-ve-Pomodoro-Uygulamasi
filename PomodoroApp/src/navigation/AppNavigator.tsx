@@ -19,7 +19,7 @@ const Stack = createStackNavigator<RootStackParamList>();
 
 export const AppNavigator: React.FC = () => {
   const theme = useTheme();
-
+//
   return (
     <Stack.Navigator
       screenOptions={{

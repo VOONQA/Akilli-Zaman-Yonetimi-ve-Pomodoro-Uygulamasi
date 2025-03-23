@@ -49,3 +49,4 @@ export type RootScreenProps<T extends keyof RootStackParamList> = {
   navigation: RootNavigationProp<T>;
   route: RootRouteProp<T>;
 };
+//
