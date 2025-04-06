@@ -9,6 +9,9 @@ import { TaskProvider } from './src/context/TaskContext';
 import { TimerProvider } from './src/context/TimerContext';
 import { SettingsProvider } from './src/context/SettingsContext';
 import { theme } from './src/constants/theme';
+import { ChatProvider } from './src/context/ChatContext';
+import ChatButton from './src/components/chat/ChatButton';
+import ChatModal from './src/components/chat/ChatModal';
 ///
 export default function App() {
   return (
@@ -16,16 +19,20 @@ export default function App() {
       <NavigationContainer>
         <PaperProvider theme={theme}>
           <DatabaseProvider>
-            <SettingsProvider>
-              <TaskProvider>
-                <TimerProvider>
-                  <View style={styles.container}>
-                    <MainApp />
-                    <StatusBar style="auto" />
-                  </View>
-                </TimerProvider>
-              </TaskProvider>
-            </SettingsProvider>
+            <ChatProvider>
+              <SettingsProvider>
+                <TaskProvider>
+                  <TimerProvider>
+                    <View style={styles.container}>
+                      <MainApp />
+                      <ChatButton />
+                      <ChatModal />
+                      <StatusBar style="auto" />
+                    </View>
+                  </TimerProvider>
+                </TaskProvider>
+              </SettingsProvider>
+            </ChatProvider>
           </DatabaseProvider>
         </PaperProvider>
       </NavigationContainer>

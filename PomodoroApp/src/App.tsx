@@ -3,6 +3,7 @@ import { StyleSheet } from 'react-native';
 import { AppNavigator } from './navigation/AppNavigator';
 import { useDatabase } from './context/DatabaseContext';
 import LoadingScreen from './components/common/LoadingScreen';
+import { checkApiKey } from './services/chatbot/checkEnv';
 ///
 // Geçici olarak burada tanımlıyoruz, aslında services/database.ts'de olacak
 const initializeTables = async (db: any) => {
@@ -27,6 +28,9 @@ const MainApp: React.FC = () => {
         await initializeTables(db);
       }
     };
+
+    // API Key'i kontrol et
+    checkApiKey();
 
     setupDatabase();
     

@@ -26,6 +26,10 @@
     },
     "plugins": [
       "expo-sqlite"
+    ],
+    "assetBundlePatterns": [
+      "**/*",
+      "assets/images/*"
     ]
   }
 }
