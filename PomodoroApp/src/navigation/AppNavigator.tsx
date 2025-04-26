@@ -11,6 +11,7 @@ import EditTaskScreen from '../screens/tasks/EditTask';
 import AchievementsScreen from '../screens/achievements/AchievementsScreen';
 import TimerSettingsScreen from '../screens/settings/TimerSettings';
 import NotificationsSettingsScreen from '../screens/settings/NotificationSettings';
+import CalendarEventImport from '../screens/calender/CalendarEventImport';
 
 // Tip tanımlamaları
 import { RootStackParamList } from './navigationTypes';
@@ -47,9 +48,9 @@ export const AppNavigator: React.FC = () => {
       <Stack.Screen
         name="EditTask"
         component={EditTaskScreen}
-        options={({ route }) => ({
-          title: route.params?.taskId ? 'Görevi Düzenle' : 'Yeni Görev',
-        })}
+        options={{
+          headerShown: false
+        }}
       />
       
       <Stack.Screen
@@ -68,6 +69,12 @@ export const AppNavigator: React.FC = () => {
         name="NotificationsSettingsScreen"
         component={NotificationsSettingsScreen}
         options={{ title: 'Bildirim Ayarları' }}
+      />
+      
+      <Stack.Screen
+        name="CalendarEventImport"
+        component={CalendarEventImport}
+        options={{ title: 'Takvim Etkinlikleri' }}
       />
     </Stack.Navigator>
   );

@@ -1,4 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { Task } from '../models/Task';
+import { useTask } from './TaskContext';
 
 export enum TimerType {
   POMODORO = 'pomodoro',
@@ -19,6 +21,7 @@ type TimerContextType = {
   timeRemaining: number;
   totalDuration: number;
   currentCycle: number;
+  currentTask: Task | null;
   stats: {
     completedPomodoros: number;
     todayFocusTime: number;
@@ -28,6 +31,8 @@ type TimerContextType = {
   resetTimer: () => void;
   skipTimer: () => void;
   changeTimerType: (type: TimerType) => void;
+  startTimerWithTask: (task: Task) => void;
+  clearTask: () => void;
 };
 
 const TimerContext = createContext<TimerContextType | undefined>(undefined);
@@ -42,22 +47,76 @@ export const TimerProvider: React.FC<{children: React.ReactNode}> = ({ children 
     completedPomodoros: 0,
     todayFocusTime: 0
   });
+  const [currentTaskId, setCurrentTaskId] = useState<string | null>(null);
+  const [currentTask, setCurrentTask] = useState<Task | null>(null);
+  
+  const { getTaskById, incrementPomodoroCount, updateTask } = useTask();
+
+  // Mevcut görevin bilgilerini yükle
+  useEffect(() => {
+    const loadCurrentTask = async () => {
+      if (currentTaskId) {
+        try {
+          const task = await getTaskById(currentTaskId);
+          if (task) {
+            setCurrentTask(task);
+          }
+        } catch (error) {
+          console.error('Görev yüklenirken hata oluştu:', error);
+        }
+      } else {
+        setCurrentTask(null);
+      }
+    };
+    
+    loadCurrentTask();
+  }, [currentTaskId, getTaskById]);
 
   useEffect(() => {
-    let interval: ReturnType<typeof setTimeout>;
+    let interval: ReturnType<typeof setInterval> | null = null; 
 
     if (timerState === TimerState.RUNNING) {
       interval = setInterval(() => {
         setTimeRemaining(prev => {
           if (prev <= 1) {
-            clearInterval(interval);
+            if (interval) {
+              clearInterval(interval);
+              interval = null;
+            }
+            
             if (timerType === TimerType.POMODORO) {
               setStats(prev => ({
                 ...prev,
                 completedPomodoros: prev.completedPomodoros + 1,
                 todayFocusTime: prev.todayFocusTime + totalDuration
               }));
+              
+              if (currentTaskId && currentTask) {
+                incrementPomodoroCount(currentTaskId)
+                  .then(updatedTask => {
+                    setCurrentTask(updatedTask);
+                    
+                    if (updatedTask.completedPomodoros >= updatedTask.pomodoroCount && !updatedTask.isCompleted) {
+                      updateTask(currentTaskId, { isCompleted: true })
+                        .then(completedTask => {
+                          setCurrentTask(completedTask);
+                          
+                          setTimeout(() => {
+                            setCurrentTask(null);
+                            setCurrentTaskId(null);
+                          }, 2000);
+                        })
+                        .catch(error => {
+                          console.error('Görev tamamlandı olarak işaretlenirken hata oluştu:', error);
+                        });
+                    }
+                  })
+                  .catch(error => {
+                    console.error('Pomodoro sayısı artırılırken hata oluştu:', error);
+                  });
+              }
             }
+            
             setTimerState(TimerState.COMPLETED);
             return 0;
           }
@@ -66,8 +125,13 @@ export const TimerProvider: React.FC<{children: React.ReactNode}> = ({ children 
       }, 1000);
     }
 
-    return () => clearInterval(interval);
-  }, [timerState, timerType, totalDuration]);
+    return () => {
+      if (interval !== null) {
+        clearInterval(interval);
+        interval = null;
+      }
+    };
+  }, [timerState, timerType, totalDuration, currentTaskId, currentTask, incrementPomodoroCount, updateTask]);
 
   const startTimer = () => {
     setTimerState(TimerState.RUNNING);
@@ -88,11 +152,11 @@ export const TimerProvider: React.FC<{children: React.ReactNode}> = ({ children 
 
   const changeTimerType = (type: TimerType) => {
     setTimerType(type);
-    let newDuration = 25 * 60;
+    let newDuration = 1 * 60;
     
     switch (type) {
       case TimerType.POMODORO:
-        newDuration = 25 * 60;
+        newDuration = 1 * 60;
         break;
       case TimerType.SHORT_BREAK:
         newDuration = 5 * 60;
@@ -107,18 +171,35 @@ export const TimerProvider: React.FC<{children: React.ReactNode}> = ({ children 
     setTimerState(TimerState.READY);
   };
 
+  const startTimerWithTask = (task: Task) => {
+    setTimerType(TimerType.POMODORO);
+    setCurrentTaskId(task.id);
+    setCurrentTask(task);
+    setTimeRemaining(1 * 60);
+    setTotalDuration(1 * 60);
+    setTimerState(TimerState.RUNNING);
+  };
+
+  const clearTask = () => {
+    setCurrentTaskId(null);
+    setCurrentTask(null);
+  };
+
   const value = {
     timerState,
     timerType,
     timeRemaining,
     totalDuration,
     currentCycle,
+    currentTask,
     stats,
     startTimer,
     pauseTimer,
     resetTimer,
     skipTimer,
-    changeTimerType
+    changeTimerType,
+    startTimerWithTask,
+    clearTask
   };
 
   return (

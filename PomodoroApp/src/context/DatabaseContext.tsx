@@ -1,7 +1,7 @@
-import React, { createContext, useContext, useState, useCallback, ReactNode } from 'react';
-
-// Veritabanı tipleri
-type Database = any; // İleride SQLite.SQLiteDatabase olacak
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { openDatabase } from '../services/database';
+import { Database } from '../types/database';
+import { initializeDatabase } from '../services/migrations';
 
 // Context tipi
 interface DatabaseContextType {
@@ -34,41 +34,44 @@ interface DatabaseProviderProps {
 export const DatabaseProvider: React.FC<DatabaseProviderProps> = ({ children }) => {
   const [db, setDb] = useState<Database | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [isInitialized, setIsInitialized] = useState(false); // Başlatma durumunu takip et
 
-  // useCallback ile sarmalayalım ki referans sabit kalsın
-  const initializeDatabase = useCallback(async () => {
-    // Eğer zaten başlatıldıysa tekrar başlatma
-    if (isInitialized) {
-      return;
-    }
-
+  // Veritabanını başlatma fonksiyonu
+  const initializeDatabaseFunc = async () => {
     try {
-      setIsLoading(true);
       console.log('Veritabanı başlatılıyor...');
+      // Veritabanını aç
+      const database = openDatabase();
       
-      // Gerçek bir veritabanı başlatması yapacaksınız
-      // Şimdilik sadece sahte bir veritabanı nesnesi oluşturuyoruz
-      setTimeout(() => {
-        setDb({} as Database);
-        setIsLoading(false);
-        setIsInitialized(true); // Başlatma işlemi tamamlandı
-      }, 500);
+      // Doğrudan database'i kullan, adapter'a gerek yok
+      await initializeDatabase(database); 
+      
+      // State'i güncelle
+      setDb(database);
+      setIsLoading(false);
+      console.log('Veritabanı başarıyla yüklendi');
     } catch (error) {
-      console.error('Veritabanı başlatma hatası:', error);
+      console.error('Veritabanı başlatılırken hata:', error);
       setIsLoading(false);
     }
-  }, [isInitialized]); // Sadece isInitialized değiştiğinde yeniden oluştur
+  };
 
-  const contextValue: DatabaseContextType = {
+  // Uygulama başlatıldığında veritabanını başlat
+  useEffect(() => {
+    initializeDatabaseFunc();
+  }, []);
+
+  // Context değerini oluştur
+  const value = {
     db,
     isLoading,
-    initializeDatabase,
+    initializeDatabase: initializeDatabaseFunc,
   };
 
   return (
-    <DatabaseContext.Provider value={contextValue}>
+    <DatabaseContext.Provider value={value}>
       {children}
     </DatabaseContext.Provider>
   );
 };
+
+export default DatabaseContext;

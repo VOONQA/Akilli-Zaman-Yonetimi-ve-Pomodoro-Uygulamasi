@@ -3,8 +3,11 @@ import { StyleSheet } from 'react-native';
 export const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 20,
     backgroundColor: '#fff',
+  },
+  scrollContainer: {
+    flex: 1,
+    padding: 20,
     paddingTop: 40,
   },
   header: {
@@ -91,15 +94,11 @@ export const styles = StyleSheet.create({
   },
   tasksPanel: {
     backgroundColor: '#fff',
-    borderRadius: 12,
-    padding: 16,
-    marginTop: 16,
-    marginBottom: 24,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
+    borderTopWidth: 1,
+    borderTopColor: '#f0f0f0',
+    paddingVertical: 16,
+    paddingHorizontal: 20,
+    maxHeight: '30%',
   },
   tasksPanelHeader: {
     flexDirection: 'row',
@@ -115,7 +114,6 @@ export const styles = StyleSheet.create({
   seeAllButton: {
     fontSize: 14,
     color: '#FF5722',
-    fontWeight: '500',
   },
   tasksList: {
     marginTop: 8,
@@ -144,5 +142,50 @@ export const styles = StyleSheet.create({
     color: '#999',
     padding: 20,
     fontSize: 14,
+  },
+  currentTaskContainer: {
+    marginHorizontal: 20,
+    marginBottom: 20,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.2,
+    shadowRadius: 1.5,
+    elevation: 2,
+  },
+  currentTaskTouchable: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: 15,
+  },
+  currentTaskInfo: {
+    flex: 1,
+    justifyContent: 'center',
+    paddingVertical: 2,
+  },
+  currentTaskLabel: {
+    fontSize: 12,
+    fontWeight: '500',
+    color: '#666',
+    marginBottom: 2,
+  },
+  currentTaskTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#333',
+    marginBottom: 2,
+  },
+  currentTaskProgress: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  currentTaskProgressText: {
+    fontSize: 14,
+    color: '#666',
+  },
+  scrollContentContainer: {
+    paddingBottom: 20,
   },
 });

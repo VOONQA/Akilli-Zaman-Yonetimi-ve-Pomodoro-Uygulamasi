@@ -10,9 +10,9 @@ import StatsScreen from '../screens/statistics/StatsScreen';
 import SettingsScreen from '../screens/settings/SettingsScreen';
 
 // Tip tanımlamaları
-import { TabParamList } from './navigationTypes';
+import { TabsParamList } from './navigationTypes';
 
-const Tab = createBottomTabNavigator<TabParamList>();
+const Tab = createBottomTabNavigator<TabsParamList>();
 
 const TabNavigator: React.FC = () => {
   const theme = useTheme();

@@ -1,32 +1,40 @@
 import { RouteProp, CompositeNavigationProp } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
+import { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
+import { CompositeScreenProps, NavigatorScreenParams } from '@react-navigation/native';
+import { StackScreenProps } from '@react-navigation/stack';
 
-// Ana tab navigasyonu için route isimleri (Home'u kaldırdık)
-export type TabParamList = {
+// Tab navigatör için parametre listesi
+export type TabsParamList = {
   Timer: undefined;
-  Tasks: undefined;
+  Tasks: { initialFilter?: 'all' | 'today' | 'upcoming' | 'completed' } | undefined;
   Statistics: undefined;
   Settings: undefined;
 };
 
 // Ana stack navigasyonu için route isimleri
 export type RootStackParamList = {
-  MainTabs: undefined;
-  TaskDetail: { taskId: number };
-  EditTask: { taskId?: number };
+  MainTabs: NavigatorScreenParams<TabsParamList> | undefined;
+  TaskDetail: { taskId: string };
+  EditTask: {
+    taskId?: string;
+    initialDate?: Date;
+    initialDateString?: string;
+  };
   AchievementsScreen: undefined;
   TimerSettingsScreen: undefined;
   NotificationsSettingsScreen: undefined;
+  CalendarEventImport: { calendarEvents: any[] };
 };
 
 // Tab navigator prop tipleri
-export type TabNavigationProp<T extends keyof TabParamList> = CompositeNavigationProp<
-  BottomTabNavigationProp<TabParamList, T>,
+export type TabNavigationProp<T extends keyof TabsParamList> = CompositeNavigationProp<
+  BottomTabNavigationProp<TabsParamList, T>,
   StackNavigationProp<RootStackParamList>
 >;
 
-export type TabRouteProp<T extends keyof TabParamList> = RouteProp<TabParamList, T>;
+export type TabRouteProp<T extends keyof TabsParamList> = RouteProp<TabsParamList, T>;
 
 // Stack navigator prop tipleri
 export type RootNavigationProp<T extends keyof RootStackParamList> = StackNavigationProp<
@@ -39,14 +47,12 @@ export type RootRouteProp<T extends keyof RootStackParamList> = RouteProp<
   T
 >;
 
-// Navigasyon prop'ları için yardımcı tipler
-export type TabScreenProps<T extends keyof TabParamList> = {
-  navigation: TabNavigationProp<T>;
-  route: TabRouteProp<T>;
-};
+// Screen props tanımları
+export type RootScreenProps<T extends keyof RootStackParamList> = 
+  StackScreenProps<RootStackParamList, T>;
 
-export type RootScreenProps<T extends keyof RootStackParamList> = {
-  navigation: RootNavigationProp<T>;
-  route: RootRouteProp<T>;
-};
+export type TabScreenProps<T extends keyof TabsParamList> = CompositeScreenProps<
+  BottomTabScreenProps<TabsParamList, T>,
+  RootScreenProps<keyof RootStackParamList>
+>;
 //

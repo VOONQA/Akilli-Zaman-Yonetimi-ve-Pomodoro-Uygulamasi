@@ -36,10 +36,13 @@ const ProgressRing: React.FC<ProgressRingProps> = ({
 
   // Progress değiştiğinde animasyon
   useEffect(() => {
+    // Progress 0 ise hızlı animasyon, değilse normal hızda
+    const duration = progress === 0 ? 100 : 300;
+    
     // Daha pürüzsüz animasyon için timing kullan
     Animated.timing(animatedValue, {
       toValue: progress,
-      duration: 300,
+      duration: duration,
       useNativeDriver: true,
     }).start();
   }, [progress, animatedValue]);

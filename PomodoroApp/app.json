@@ -25,7 +25,13 @@
       "favicon": "./assets/favicon.png"
     },
     "plugins": [
-      "expo-sqlite"
+      "expo-sqlite",
+      [
+        "expo-calendar",
+        {
+          "calendarPermission": "Takvim bilgilerinize erişime ihtiyacımız var."
+        }
+      ]
     ],
     "assetBundlePatterns": [
       "**/*",
