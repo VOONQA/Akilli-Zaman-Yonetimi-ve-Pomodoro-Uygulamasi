@@ -4,6 +4,7 @@ import { AppNavigator } from './navigation/AppNavigator';
 import { useDatabase } from './context/DatabaseContext';
 import LoadingScreen from './components/common/LoadingScreen';
 import { checkApiKey } from './services/chatbot/checkEnv';
+import { initDatabase } from './services/database';
 ///
 // Geçici olarak burada tanımlıyoruz, aslında services/database.ts'de olacak
 const initializeTables = async (db: any) => {
@@ -31,6 +32,8 @@ const MainApp: React.FC = () => {
 
     // API Key'i kontrol et
     checkApiKey();
+
+    initDatabase().catch(console.error);
 
     setupDatabase();
     

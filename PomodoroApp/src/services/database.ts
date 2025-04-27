@@ -163,3 +163,30 @@ export const getDatabasePath = (): string => {
   
   return `${FileSystem.documentDirectory}SQLite/${DATABASE_NAME}`;
 };
+
+// Veritabanı başlatma fonksiyonu
+export const initDatabase = async () => {
+  const db = openDatabase();
+  
+  try {
+    // Mevcut tabloyu düşür ve yeniden oluştur
+    await db.execute(`DROP TABLE IF EXISTS saved_youtube_videos;`);
+    
+    await db.execute(`
+      CREATE TABLE IF NOT EXISTS saved_youtube_videos (
+        id TEXT PRIMARY KEY NOT NULL,
+        title TEXT NOT NULL,
+        thumbnail TEXT NOT NULL,
+        channelTitle TEXT NOT NULL,
+        channelId TEXT NOT NULL,
+        categoryId TEXT NOT NULL,
+        createdAt DATETIME DEFAULT CURRENT_TIMESTAMP
+      );
+    `);
+
+    console.log('Veritabanı başarıyla başlatıldı');
+  } catch (error) {
+    console.error('Veritabanı başlatılırken hata:', error);
+    throw error;
+  }
+};

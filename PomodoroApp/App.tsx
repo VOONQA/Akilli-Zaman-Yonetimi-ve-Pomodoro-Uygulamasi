@@ -10,6 +10,7 @@ import { TimerProvider } from './src/context/TimerContext';
 import { SettingsProvider } from './src/context/SettingsContext';
 import { theme } from './src/constants/theme';
 import { ChatProvider } from './src/context/ChatContext';
+import { YouTubeProvider } from './src/context/YouTubeContext';
 import ChatButton from './src/components/chat/ChatButton';
 import ChatModal from './src/components/chat/ChatModal';
 ///
@@ -23,12 +24,14 @@ export default function App() {
               <SettingsProvider>
                 <TaskProvider>
                   <TimerProvider>
+                    <YouTubeProvider>
                     <View style={styles.container}>
                       <MainApp />
                       <ChatButton />
                       <ChatModal />
                       <StatusBar style="auto" />
                     </View>
+                    </YouTubeProvider>
                   </TimerProvider>
                 </TaskProvider>
               </SettingsProvider>

@@ -11,9 +11,19 @@ export const styles = StyleSheet.create({
     paddingTop: 40,
   },
   header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 20,
-    marginTop: 10,
+    paddingHorizontal: 20,
+    paddingVertical: 15,
+    backgroundColor: '#fff',
+    borderBottomWidth: 1,
+    borderBottomColor: '#f0f0f0',
+  },
+  headerTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#333',
   },
   title: {
     fontSize: 24,
@@ -187,5 +197,15 @@ export const styles = StyleSheet.create({
   },
   scrollContentContainer: {
     paddingBottom: 20,
+  },
+  youtubeButton: {
+    padding: 8,
+    borderRadius: 20,
+    backgroundColor: '#f8f8f8',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 1,
+    elevation: 1,
   },
 });

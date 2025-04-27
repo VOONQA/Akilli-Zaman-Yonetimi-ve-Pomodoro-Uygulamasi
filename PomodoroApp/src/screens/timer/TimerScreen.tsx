@@ -1,16 +1,78 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { View, Text, TouchableOpacity, ScrollView, FlatList, Animated, StyleSheet } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons, FontAwesome } from '@expo/vector-icons';
 import { TabScreenProps } from '../../navigation/navigationTypes';
 import { useTimer, TimerType, TimerState } from '../../context/TimerContext';
 import { TimerDisplay, ControlPanel, ProgressRing } from '../../components/timer';
-import { styles } from './styles';
+import { styles as baseStyles } from './styles';
 import { TaskList } from '../../components/tasks';
 import { useTask } from '../../context/TaskContext';
 import { Task } from '../../models/Task';
 import TaskItem from '../../components/tasks/TaskItem';
+import { useYouTube } from '../../context/YouTubeContext';
+import { YouTubeModal } from '../../components/youtube';
 
 type Props = TabScreenProps<'Timer'>;
+
+// Yeni stiller için ayrı bir StyleSheet oluşturalım
+const localStyles = StyleSheet.create({
+  headerContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
+    marginBottom: 8,
+  },
+  noteButton: {
+    padding: 6,
+  },
+  headerTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#333',
+  },
+  youtubeButton: {
+    padding: 6,
+  },
+  timerTypeButtons: {
+    flexDirection: 'row',
+    paddingHorizontal: 4,
+    paddingTop: 4,
+    marginBottom: 20,
+  },
+  typeButton: {
+    flex: 1,
+    paddingVertical: 8,
+    marginHorizontal: 2,
+    borderRadius: 20,
+    backgroundColor: '#f0f0f0',
+    alignItems: 'center',
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.2,
+    shadowRadius: 2,
+  },
+  activeTypeButton: {
+    backgroundColor: '#FF5722',
+    elevation: 4,
+  },
+  typeButtonText: {
+    color: '#666',
+    fontSize: 14,
+  },
+  activeTypeButtonText: {
+    color: '#fff',
+  },
+  timerContainerWrapper: {
+    marginTop: 10,
+    marginBottom: 30,
+    alignItems: 'center',
+  }
+});
 
 const TimerScreen: React.FC<Props> = ({ navigation }) => {
   const {
@@ -57,6 +119,9 @@ const TimerScreen: React.FC<Props> = ({ navigation }) => {
         return '#FF5722';
     }
   };
+
+  // YouTube context'ini ekleyelim
+  const { setYouTubeModalVisible } = useYouTube();
 
   // Tamamlanan görevleri yükle
   useEffect(() => {
@@ -204,38 +269,85 @@ const TimerScreen: React.FC<Props> = ({ navigation }) => {
     }
   });
 
+  // YouTube modalını açmak ve kapatmak için fonksiyonlar
+  const openYouTubeModal = () => {
+    setYouTubeModalVisible(true);
+  };
+
   return (
-    <View style={styles.container}>
-      <ScrollView style={styles.scrollContainer} contentContainerStyle={styles.scrollContentContainer}>
-        <View style={styles.header}>
-          <Text style={styles.title}>
-            {timerType === TimerType.POMODORO
-              ? 'Pomodoro'
-              : timerType === TimerType.SHORT_BREAK
-                ? 'Kısa Mola'
-                : 'Uzun Mola'}
-          </Text>
+    <View style={baseStyles.container}>
+      <ScrollView style={baseStyles.scrollContainer} contentContainerStyle={baseStyles.scrollContentContainer}>
+        <View style={localStyles.headerContainer}>
+          <TouchableOpacity style={localStyles.noteButton}>
+            <Ionicons name="document-text-outline" size={24} color="#FF5722" />
+          </TouchableOpacity>
+          <Text style={localStyles.headerTitle}>Pomodoro</Text>
+          <TouchableOpacity
+            style={localStyles.youtubeButton}
+            onPress={openYouTubeModal}
+          >
+            <Ionicons name="logo-youtube" size={24} color="#FF0000" />
+          </TouchableOpacity>
+        </View>
+
+        <View style={localStyles.timerTypeButtons}>
+          <TouchableOpacity
+            style={[
+              localStyles.typeButton,
+              timerType === TimerType.POMODORO && localStyles.activeTypeButton
+            ]}
+            onPress={() => changeTimerType(TimerType.POMODORO)}
+          >
+            <Text style={[localStyles.typeButtonText, timerType === TimerType.POMODORO && localStyles.activeTypeButtonText]}>
+              Pomodoro
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[
+              localStyles.typeButton,
+              timerType === TimerType.SHORT_BREAK && localStyles.activeTypeButton
+            ]}
+            onPress={() => changeTimerType(TimerType.SHORT_BREAK)}
+          >
+            <Text style={[localStyles.typeButtonText, timerType === TimerType.SHORT_BREAK && localStyles.activeTypeButtonText]}>
+              Kısa Mola
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[
+              localStyles.typeButton,
+              timerType === TimerType.LONG_BREAK && localStyles.activeTypeButton
+            ]}
+            onPress={() => changeTimerType(TimerType.LONG_BREAK)}
+          >
+            <Text style={[localStyles.typeButtonText, timerType === TimerType.LONG_BREAK && localStyles.activeTypeButtonText]}>
+              Uzun Mola
+            </Text>
+          </TouchableOpacity>
         </View>
 
         {currentTask && (
           <Animated.View 
             style={[
-              styles.currentTaskContainer, 
+              baseStyles.currentTaskContainer, 
               { 
                 opacity: fadeAnim,
-                height: heightAnim 
+                height: heightAnim,
+                marginBottom: 20,
               }
             ]}
           >
             <TouchableOpacity 
-              style={styles.currentTaskTouchable}
+              style={baseStyles.currentTaskTouchable}
               onPress={() => navigateToTaskDetail(currentTask.id)}
             >
-              <View style={styles.currentTaskInfo}>
-                <Text style={styles.currentTaskLabel}>Seçilen Görev:</Text>
-                <Text style={styles.currentTaskTitle}>{currentTask.title}</Text>
-                <View style={styles.currentTaskProgress}>
-                  <Text style={styles.currentTaskProgressText}>
+              <View style={baseStyles.currentTaskInfo}>
+                <Text style={baseStyles.currentTaskLabel}>Seçilen Görev:</Text>
+                <Text style={baseStyles.currentTaskTitle}>{currentTask.title}</Text>
+                <View style={baseStyles.currentTaskProgress}>
+                  <Text style={baseStyles.currentTaskProgressText}>
                     {currentTask.completedPomodoros}/{currentTask.pomodoroCount} Pomodoro
                   </Text>
                 </View>
@@ -253,60 +365,7 @@ const TimerScreen: React.FC<Props> = ({ navigation }) => {
           </Animated.View>
         )}
 
-        <View style={styles.timerTypeButtons}>
-          <TouchableOpacity
-            style={[
-              styles.typeButton,
-              timerType === TimerType.POMODORO && styles.activeTypeButton
-            ]}
-            onPress={() => changeTimerType(TimerType.POMODORO)}
-          >
-            <Text
-              style={[
-                styles.typeButtonText,
-                timerType === TimerType.POMODORO && styles.activeTypeButtonText
-              ]}
-            >
-              Pomodoro
-            </Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={[
-              styles.typeButton,
-              timerType === TimerType.SHORT_BREAK && styles.activeTypeButton
-            ]}
-            onPress={() => changeTimerType(TimerType.SHORT_BREAK)}
-          >
-            <Text
-              style={[
-                styles.typeButtonText,
-                timerType === TimerType.SHORT_BREAK && styles.activeTypeButtonText
-              ]}
-            >
-              Kısa Mola
-            </Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={[
-              styles.typeButton,
-              timerType === TimerType.LONG_BREAK && styles.activeTypeButton
-            ]}
-            onPress={() => changeTimerType(TimerType.LONG_BREAK)}
-          >
-            <Text
-              style={[
-                styles.typeButtonText,
-                timerType === TimerType.LONG_BREAK && styles.activeTypeButtonText
-              ]}
-            >
-              Uzun Mola
-            </Text>
-          </TouchableOpacity>
-        </View>
-
-        <View style={styles.timerContainer}>
+        <View style={localStyles.timerContainerWrapper}>
           <ProgressRing
             progress={progressPercentage}
             size={280}
@@ -329,8 +388,8 @@ const TimerScreen: React.FC<Props> = ({ navigation }) => {
           onNext={skipTimer}
         />
 
-        <View style={styles.motivationContainer}>
-          <Text style={styles.motivationText}>
+        <View style={baseStyles.motivationContainer}>
+          <Text style={baseStyles.motivationText}>
             {timerState === TimerState.READY && "Başlamaya hazır mısın?"}
             {timerState === TimerState.RUNNING && timerType === TimerType.POMODORO && "Şimdi odaklanma zamanı!"}
             {timerState === TimerState.RUNNING && timerType !== TimerType.POMODORO && "Rahatla ve dinlen!"}
@@ -340,10 +399,10 @@ const TimerScreen: React.FC<Props> = ({ navigation }) => {
         </View>
         
         <View style={timerStyles.tasksContainer}>
-          <View style={styles.tasksPanelHeader}>
-            <Text style={styles.tasksPanelTitle}>Tamamlanan Görevler ({completedTasks.length})</Text>
+          <View style={baseStyles.tasksPanelHeader}>
+            <Text style={baseStyles.tasksPanelTitle}>Tamamlanan Görevler ({completedTasks.length})</Text>
             <TouchableOpacity onPress={() => navigation.navigate('Tasks', { initialFilter: 'completed' as const })}>
-              <Text style={styles.seeAllButton}>Tümünü Gör</Text>
+              <Text style={baseStyles.seeAllButton}>Tümünü Gör</Text>
             </TouchableOpacity>
           </View>
           
@@ -369,6 +428,9 @@ const TimerScreen: React.FC<Props> = ({ navigation }) => {
             </View>
           )}
         </View>
+
+        {/* YouTube Modal bileşenini güncelleyelim */}
+        <YouTubeModal />
       </ScrollView>
     </View>
   );

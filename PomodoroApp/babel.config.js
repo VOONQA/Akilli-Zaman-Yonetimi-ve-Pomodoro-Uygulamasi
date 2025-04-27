@@ -7,9 +7,9 @@ module.exports = function(api) {
         "moduleName": "@env",
         "path": ".env",
         "blacklist": null,
-        "whitelist": null,
+        "whitelist": ["OPENAI_API_KEY", "YOUTUBE_API_KEY"],
         "safe": false,
-        "allowUndefined": true
+        "allowUndefined": false
       }],
       'react-native-reanimated/plugin'
     ]
