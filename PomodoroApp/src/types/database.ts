@@ -10,11 +10,12 @@ interface DbResult {
 // Veritabanı arayüzü - hem services/database.ts hem de tüm uygulama için ortak
 export interface Database {
   _db?: any; // Orijinal SQLite veritabanı nesnesini saklamak için
-  execute: (query: string, params?: any[]) => Promise<DbResult>;
+  execute: (query: string, params?: any[]) => Promise<void>;
   select: <T>(query: string, params?: any[]) => Promise<T[]>;
-  insert: (table: string, data: Record<string, any>) => Promise<number>;
-  update: (table: string, data: Record<string, any>, where: string, params?: any[]) => Promise<number>;
-  delete: (table: string, where: string, params?: any[]) => Promise<number>;
+  insert: (tableName: string, row: Record<string, any>) => Promise<void>;
+  update: (tableName: string, row: Record<string, any>, where: string, params?: any[]) => Promise<void>;
+  delete: (tableName: string, where: string, params?: any[]) => Promise<void>;
+  transaction: <T>(callback: () => Promise<T>) => Promise<T>;
 }
 
 // Task tablosu için tip tanımlamaları
@@ -31,3 +32,24 @@ export interface TaskTable {
   created_at: string; // ISO tarih formatında
   updated_at: string; // ISO tarih formatında
 }
+
+// Pomodoro oturumları tablosu için tip tanımlamaları
+export interface PomodoroSessionTable {
+  id: string;
+  start_time: string; // ISO tarih formatında
+  end_time: string; // ISO tarih formatında
+  duration: number; // saniye cinsinden
+  task_id: string | null;
+  type: string; // 'pomodoro', 'shortBreak', 'longBreak'
+  completed: number; // 0 = false, 1 = true
+  date: string; // YYYY-MM-DD formatında
+  time_of_day: number; // 0-23 arası saat dilimi
+  created_at: string; // ISO tarih formatında
+  updated_at: string; // ISO tarih formatında
+}
+
+// Veritabanı tabloları için birleşik tip
+export type DatabaseTables = {
+  tasks: TaskTable;
+  pomodoro_sessions: PomodoroSessionTable;
+};

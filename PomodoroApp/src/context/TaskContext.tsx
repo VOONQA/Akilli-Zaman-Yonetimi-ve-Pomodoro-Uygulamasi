@@ -20,6 +20,7 @@ interface TaskContextType {
   completeTask: (id: string) => Promise<Task>;
   incrementPomodoroCount: (id: string) => Promise<Task>;
   toggleTaskCompletion: (id: string) => Promise<Task>;
+  incrementTaskFocusTime: (id: string, duration: number) => Promise<Task>;
 }
 
 // Context oluşturma
@@ -71,6 +72,7 @@ export const TaskProvider: React.FC<TaskProviderProps> = ({ children }) => {
         isCompleted: row.is_completed === 1,
         pomodoroCount: row.pomodoro_count,
         completedPomodoros: row.completed_pomodoros,
+        totalFocusTime: row.total_focus_time || 0,
         tags: row.tags ? JSON.parse(row.tags) : [],
         createdAt: parseDateFromSQL(row.created_at),
         updatedAt: parseDateFromSQL(row.updated_at)
@@ -118,6 +120,7 @@ export const TaskProvider: React.FC<TaskProviderProps> = ({ children }) => {
         isCompleted: row.is_completed === 1,
         pomodoroCount: row.pomodoro_count,
         completedPomodoros: row.completed_pomodoros,
+        totalFocusTime: row.total_focus_time || 0,
         tags: row.tags ? JSON.parse(row.tags) : [],
         createdAt: parseDateFromSQL(row.created_at),
         updatedAt: parseDateFromSQL(row.updated_at)
@@ -151,6 +154,7 @@ export const TaskProvider: React.FC<TaskProviderProps> = ({ children }) => {
         isCompleted: row.is_completed === 1,
         pomodoroCount: row.pomodoro_count,
         completedPomodoros: row.completed_pomodoros,
+        totalFocusTime: row.total_focus_time || 0,
         tags: row.tags ? JSON.parse(row.tags) : [],
         createdAt: parseDateFromSQL(row.created_at),
         updatedAt: parseDateFromSQL(row.updated_at)
@@ -184,6 +188,7 @@ export const TaskProvider: React.FC<TaskProviderProps> = ({ children }) => {
         isCompleted: row.is_completed === 1,
         pomodoroCount: row.pomodoro_count,
         completedPomodoros: row.completed_pomodoros,
+        totalFocusTime: row.total_focus_time || 0,
         tags: row.tags ? JSON.parse(row.tags) : [],
         createdAt: parseDateFromSQL(row.created_at),
         updatedAt: parseDateFromSQL(row.updated_at)
@@ -235,6 +240,7 @@ export const TaskProvider: React.FC<TaskProviderProps> = ({ children }) => {
       isCompleted: false,
       pomodoroCount: taskData.pomodoroCount || 1,
       completedPomodoros: 0,
+      totalFocusTime: taskData.totalFocusTime || 0,
       tags: taskData.tags || [],
       createdAt: now,
       updatedAt: now
@@ -250,6 +256,7 @@ export const TaskProvider: React.FC<TaskProviderProps> = ({ children }) => {
         is_completed: newTask.isCompleted ? 1 : 0,
         pomodoro_count: newTask.pomodoroCount,
         completed_pomodoros: newTask.completedPomodoros,
+        total_focus_time: newTask.totalFocusTime,
         tags: JSON.stringify(newTask.tags),
         created_at: formatDateForSQL(newTask.createdAt),
         updated_at: formatDateForSQL(newTask.updatedAt)
@@ -287,6 +294,7 @@ export const TaskProvider: React.FC<TaskProviderProps> = ({ children }) => {
         is_completed: updatedTask.isCompleted ? 1 : 0,
         pomodoro_count: updatedTask.pomodoroCount,
         completed_pomodoros: updatedTask.completedPomodoros,
+        total_focus_time: updatedTask.totalFocusTime,
         tags: JSON.stringify(updatedTask.tags),
         updated_at: formatDateForSQL(updatedTask.updatedAt)
       };
@@ -364,6 +372,19 @@ export const TaskProvider: React.FC<TaskProviderProps> = ({ children }) => {
     return updatedTask;
   };
 
+  // Görev için geçirilen süreyi artır
+  const incrementTaskFocusTime = async (id: string, duration: number): Promise<Task> => {
+    // Mevcut görevi al
+    const task = await getTaskById(id);
+    if (!task) throw new Error('Görev bulunamadı');
+    
+    // Odaklanma süresini artır
+    const totalFocusTime = task.totalFocusTime + duration;
+    
+    // Güncelle
+    return updateTask(id, { totalFocusTime });
+  };
+
   const value: TaskContextType = {
     tasks,
     isLoading,
@@ -379,7 +400,8 @@ export const TaskProvider: React.FC<TaskProviderProps> = ({ children }) => {
     deleteTask,
     completeTask,
     incrementPomodoroCount,
-    toggleTaskCompletion
+    toggleTaskCompletion,
+    incrementTaskFocusTime
   };
 
   return (

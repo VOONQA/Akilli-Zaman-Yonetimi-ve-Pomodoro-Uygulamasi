@@ -50,7 +50,7 @@ export const TimerProvider: React.FC<{children: React.ReactNode}> = ({ children 
   const [currentTaskId, setCurrentTaskId] = useState<string | null>(null);
   const [currentTask, setCurrentTask] = useState<Task | null>(null);
   
-  const { getTaskById, incrementPomodoroCount, updateTask } = useTask();
+  const { getTaskById, incrementPomodoroCount, updateTask, incrementTaskFocusTime } = useTask();
 
   // Mevcut görevin bilgilerini yükle
   useEffect(() => {
@@ -92,7 +92,10 @@ export const TimerProvider: React.FC<{children: React.ReactNode}> = ({ children 
               }));
               
               if (currentTaskId && currentTask) {
-                incrementPomodoroCount(currentTaskId)
+                incrementTaskFocusTime(currentTaskId, totalDuration)
+                  .then(() => {
+                    return incrementPomodoroCount(currentTaskId);
+                  })
                   .then(updatedTask => {
                     setCurrentTask(updatedTask);
                     
@@ -112,7 +115,7 @@ export const TimerProvider: React.FC<{children: React.ReactNode}> = ({ children 
                     }
                   })
                   .catch(error => {
-                    console.error('Pomodoro sayısı artırılırken hata oluştu:', error);
+                    console.error('Pomodoro sayısı veya süre artırılırken hata oluştu:', error);
                   });
               }
             }
@@ -131,7 +134,7 @@ export const TimerProvider: React.FC<{children: React.ReactNode}> = ({ children 
         interval = null;
       }
     };
-  }, [timerState, timerType, totalDuration, currentTaskId, currentTask, incrementPomodoroCount, updateTask]);
+  }, [timerState, timerType, totalDuration, currentTaskId, currentTask, incrementPomodoroCount, updateTask, incrementTaskFocusTime]);
 
   const startTimer = () => {
     setTimerState(TimerState.RUNNING);
@@ -152,11 +155,11 @@ export const TimerProvider: React.FC<{children: React.ReactNode}> = ({ children 
 
   const changeTimerType = (type: TimerType) => {
     setTimerType(type);
-    let newDuration = 1 * 60;
+    let newDuration = 25 * 60;
     
     switch (type) {
       case TimerType.POMODORO:
-        newDuration = 1 * 60;
+        newDuration = 25 * 60;
         break;
       case TimerType.SHORT_BREAK:
         newDuration = 5 * 60;
@@ -175,8 +178,8 @@ export const TimerProvider: React.FC<{children: React.ReactNode}> = ({ children 
     setTimerType(TimerType.POMODORO);
     setCurrentTaskId(task.id);
     setCurrentTask(task);
-    setTimeRemaining(1 * 60);
-    setTotalDuration(1 * 60);
+    setTimeRemaining(25 * 60);
+    setTotalDuration(5 * 60);
     setTimerState(TimerState.RUNNING);
   };
 

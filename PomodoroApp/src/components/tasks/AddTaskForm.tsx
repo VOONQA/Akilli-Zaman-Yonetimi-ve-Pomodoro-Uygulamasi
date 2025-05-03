@@ -36,7 +36,7 @@ const AddTaskForm: React.FC<AddTaskFormProps> = ({
   const [selectedCalendarDate, setSelectedCalendarDate] = useState<Date | null>(null);
   const [selectedDateTasks, setSelectedDateTasks] = useState<Task[]>([]);
   
-  const { getTasks } = useTask();
+  const { getTasks, getTasksByDate } = useTask();
   const [titleError, setTitleError] = useState('');
   
   const validateForm = (): boolean => {
@@ -56,7 +56,7 @@ const AddTaskForm: React.FC<AddTaskFormProps> = ({
     setSelectedCalendarDate(selectedDate);
     // Seçilen günün görevlerini yükle
     try {
-      const tasks = await getTasks(selectedDate);
+      const tasks = await getTasksByDate(selectedDate);
       setSelectedDateTasks(tasks);
     } catch (error) {
       console.error('Görevler yüklenirken hata oluştu:', error);
@@ -363,7 +363,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     borderTopLeftRadius: 16,
     borderTopRightRadius: 16,
-    height: '85%',
+    height: '95%',
   },
   calendarHeader: {
     flexDirection: 'row',

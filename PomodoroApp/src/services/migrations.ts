@@ -11,7 +11,39 @@ CREATE TABLE IF NOT EXISTS tasks (
   is_completed INTEGER DEFAULT 0,
   pomodoro_count INTEGER DEFAULT 1,
   completed_pomodoros INTEGER DEFAULT 0,
+  total_focus_time INTEGER DEFAULT 0,
   tags TEXT,
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL
+)
+`;
+
+// Pomodoro oturumlarını saklayacak tablo
+const CREATE_POMODORO_SESSIONS_TABLE = `
+CREATE TABLE IF NOT EXISTS pomodoro_sessions (
+  id TEXT PRIMARY KEY,
+  start_time TEXT NOT NULL,
+  end_time TEXT NOT NULL,
+  duration INTEGER NOT NULL,
+  task_id TEXT,
+  type TEXT NOT NULL,
+  completed INTEGER DEFAULT 0,
+  date TEXT NOT NULL,
+  time_of_day INTEGER NOT NULL,
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL,
+  FOREIGN KEY (task_id) REFERENCES tasks (id) ON DELETE CASCADE
+)
+`;
+
+// Yapay zeka analizlerini saklayacak tablo
+const CREATE_AI_ANALYSIS_TABLE = `
+CREATE TABLE IF NOT EXISTS ai_analysis (
+  id TEXT PRIMARY KEY,
+  date TEXT NOT NULL,
+  period_type TEXT NOT NULL, 
+  period_value TEXT NOT NULL,
+  analysis_text TEXT NOT NULL,
   created_at TEXT NOT NULL,
   updated_at TEXT NOT NULL
 )
@@ -24,6 +56,12 @@ export const initializeDatabase = async (database: Database): Promise<void> => {
     
     // Tasks tablosunu oluştur
     await database.execute(CREATE_TASKS_TABLE);
+    
+    // Pomodoro oturumları tablosunu oluştur
+    await database.execute(CREATE_POMODORO_SESSIONS_TABLE);
+    
+    // Yapay zeka analiz tablosunu oluştur
+    await database.execute(CREATE_AI_ANALYSIS_TABLE);
     
     console.log('Veritabanı tabloları başarıyla oluşturuldu');
   } catch (error) {

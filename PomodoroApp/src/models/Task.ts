@@ -7,6 +7,7 @@ export interface Task {
   isCompleted: boolean;
   pomodoroCount: number;
   completedPomodoros: number;
+  totalFocusTime: number;
   tags?: string[];
   createdAt: Date;
   updatedAt: Date;
@@ -19,6 +20,7 @@ export interface CreateTaskDTO {
   date: Date;
   dueDate?: Date;
   pomodoroCount: number;
+  totalFocusTime?: number;
   tags?: string[];
 }
 
