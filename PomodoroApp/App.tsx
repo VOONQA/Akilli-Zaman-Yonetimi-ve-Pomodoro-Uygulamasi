@@ -12,6 +12,7 @@ import { StatisticsProvider } from './src/context/StatisticsContext';
 import { theme } from './src/constants/theme';
 import { ChatProvider } from './src/context/ChatContext';
 import { YouTubeProvider } from './src/context/YouTubeContext';
+import { NoteProvider } from './src/context/NoteContext';
 import ChatButton from './src/components/chat/ChatButton';
 import ChatModal from './src/components/chat/ChatModal';
 ///
@@ -27,12 +28,14 @@ export default function App() {
                   <TimerProvider>
                     <StatisticsProvider>
                       <YouTubeProvider>
-                        <View style={styles.container}>
-                          <MainApp />
-                          <ChatButton />
-                          <ChatModal />
-                          <StatusBar style="auto" />
-                        </View>
+                        <NoteProvider>
+                          <View style={styles.container}>
+                            <MainApp />
+                            <ChatButton />
+                            <ChatModal />
+                            <StatusBar style="auto" />
+                          </View>
+                        </NoteProvider>
                       </YouTubeProvider>
                     </StatisticsProvider>
                   </TimerProvider>

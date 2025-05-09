@@ -49,6 +49,29 @@ CREATE TABLE IF NOT EXISTS ai_analysis (
 )
 `;
 
+// Not tablolarını oluşturma sorguları
+const CREATE_NOTES_TABLE = `
+CREATE TABLE IF NOT EXISTS notes (
+  id TEXT PRIMARY KEY,
+  title TEXT NOT NULL,
+  content TEXT NOT NULL,
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL,
+  folder_id TEXT,
+  color TEXT
+)
+`;
+
+const CREATE_NOTE_FOLDERS_TABLE = `
+CREATE TABLE IF NOT EXISTS note_folders (
+  id TEXT PRIMARY KEY,
+  name TEXT NOT NULL,
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL,
+  color TEXT
+)
+`;
+
 // Veritabanı tablosu oluşturma
 export const initializeDatabase = async (database: Database): Promise<void> => {
   try {
@@ -62,6 +85,10 @@ export const initializeDatabase = async (database: Database): Promise<void> => {
     
     // Yapay zeka analiz tablosunu oluştur
     await database.execute(CREATE_AI_ANALYSIS_TABLE);
+    
+    // Not sisteminin tablolarını oluştur
+    await database.execute(CREATE_NOTES_TABLE);
+    await database.execute(CREATE_NOTE_FOLDERS_TABLE);
     
     console.log('Veritabanı tabloları başarıyla oluşturuldu');
   } catch (error) {

@@ -76,6 +76,19 @@ export default function DebugPanel() {
         }));
       }
       
+      // Not klasörleri tablosunu kontrol et
+      if (tablesResult.some((t: TableInfo) => t.name === 'note_folders')) {
+        const countResult = await db.select<CountResult>(`SELECT COUNT(*) as count FROM note_folders`);
+        const folderCount = countResult[0]?.count || 0;
+        
+        const folderRows = await db.select(`SELECT * FROM note_folders LIMIT 10`);
+        setDbInfo((prev: any) => ({
+          ...prev,
+          folderCount: folderCount,
+          sampleFolders: folderRows
+        }));
+      }
+      
       // İstatistik verilerini çek
       try {
         const today = new Date();
@@ -297,6 +310,21 @@ export default function DebugPanel() {
           ))}
         </View>
       )}
+      
+      {dbInfo.sampleFolders && (
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Not Klasörleri ({dbInfo.folderCount || 0})</Text>
+          
+          {dbInfo.sampleFolders?.map((folder: any, index: number) => (
+            <View key={index} style={styles.folderCard}>
+              <Text style={styles.folderName}>{folder.name}</Text>
+              <Text style={styles.folderInfo}>ID: {folder.id}</Text>
+              <Text style={styles.folderInfo}>Renk: {folder.color || 'Yok'}</Text>
+              <Text style={styles.folderInfo}>Oluşturulma: {folder.created_at}</Text>
+            </View>
+          ))}
+        </View>
+      )}
     </ScrollView>
   );
 }
@@ -431,5 +459,24 @@ const styles = StyleSheet.create({
     color: '#666',
     fontStyle: 'italic',
     marginTop: 4,
+  },
+  folderCard: {
+    marginBottom: 12,
+    padding: 12,
+    backgroundColor: '#e8f5e9',
+    borderRadius: 4,
+    borderLeftWidth: 4,
+    borderLeftColor: '#4CAF50',
+  },
+  folderName: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginBottom: 8,
+    color: '#333',
+  },
+  folderInfo: {
+    fontSize: 14,
+    color: '#666',
+    marginBottom: 4,
   },
 });

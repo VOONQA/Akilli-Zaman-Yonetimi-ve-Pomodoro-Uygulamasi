@@ -11,6 +11,7 @@ import { Task } from '../../models/Task';
 import TaskItem from '../../components/tasks/TaskItem';
 import { useYouTube } from '../../context/YouTubeContext';
 import { YouTubeModal } from '../../components/youtube';
+import NoteModal from '../../components/notes/NoteModal';
 
 type Props = TabScreenProps<'Timer'>;
 
@@ -274,11 +275,26 @@ const TimerScreen: React.FC<Props> = ({ navigation }) => {
     setYouTubeModalVisible(true);
   };
 
+  // TimerScreen bileşeni içinde eklenecek state
+  const [noteModalVisible, setNoteModalVisible] = useState(false);
+
+  // Not modali açma/kapama işlemleri
+  const openNoteModal = () => {
+    setNoteModalVisible(true);
+  };
+
+  const closeNoteModal = () => {
+    setNoteModalVisible(false);
+  };
+
   return (
     <View style={baseStyles.container}>
       <ScrollView style={baseStyles.scrollContainer} contentContainerStyle={baseStyles.scrollContentContainer}>
         <View style={localStyles.headerContainer}>
-          <TouchableOpacity style={localStyles.noteButton}>
+          <TouchableOpacity 
+            style={localStyles.noteButton}
+            onPress={openNoteModal}
+          >
             <Ionicons name="document-text-outline" size={24} color="#FF5722" />
           </TouchableOpacity>
           <Text style={localStyles.headerTitle}>Pomodoro</Text>
@@ -431,6 +447,12 @@ const TimerScreen: React.FC<Props> = ({ navigation }) => {
 
         {/* YouTube Modal bileşenini güncelleyelim */}
         <YouTubeModal />
+
+        {/* Not düğmesini güncelleme (localStyles.headerContainer içindeki TouchableOpacity) */}
+        <NoteModal
+          visible={noteModalVisible}
+          onClose={closeNoteModal}
+        />
       </ScrollView>
     </View>
   );
