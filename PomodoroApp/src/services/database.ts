@@ -21,84 +21,107 @@ export interface Database {
 // Veritabanı dosyası adı
 const DATABASE_NAME = 'pomodoro.db';
 
+// Singleton veritabanı örneği
+let dbInstance: any = null;
+
 // Veritabanını aç
 export function openDatabase(): Database {
-  // Expo SQLite'ın doğru API'sini kullanalım
-  const db = SQLite.openDatabaseSync(DATABASE_NAME);
-  
-  // Basit wrapper fonksiyonları
+  try {
+    if (dbInstance) {
+      return createDatabaseInterface(dbInstance);
+    }
+    
+    // Web platformu kontrolü
+    if (Platform.OS === 'web') {
+      console.warn('SQLite web platformunda tam desteklenmiyor, bazı işlevler çalışmayabilir');
+      return createEmptyDatabaseInterface();
+    }
+    
+    // Yeni API'yi kullan
+    dbInstance = SQLite.openDatabaseSync(DATABASE_NAME);
+    console.log('Veritabanı başarıyla açıldı');
+    
+    return createDatabaseInterface(dbInstance);
+  } catch (error) {
+    console.error('Veritabanı açılırken hata:', error);
+    return createEmptyDatabaseInterface();
+  }
+}
+
+// Boş veritabanı arayüzü - hata durumunda
+function createEmptyDatabaseInterface(): Database {
+  return {
+    execute: async () => ({ insertId: 0, rowsAffected: 0, rows: [] }),
+    select: async <T>() => [] as T[],
+    insert: async () => 0,
+    update: async () => 0,
+    delete: async () => 0
+  };
+}
+
+// Modern veritabanı arayüzü
+function createDatabaseInterface(db: any): Database {
   return {
     // Genel sorgu çalıştırma
-    execute: (query: string, params: any[] = []): Promise<DbResult> => {
-      return new Promise((resolve, reject) => {
-        try {
-          // Yeni API'yi kullanalım - runAsync
-          db.runAsync(query, params)
-            .then((result) => {
-              resolve({
-                insertId: result.lastInsertRowId,
-                rowsAffected: result.changes,
-                rows: []
-              });
-            })
-            .catch((error) => {
-              console.error("Query error:", query, error);
-              reject(error);
-            });
-        } catch (err) {
-          console.error("Fatal query error:", query, err);
-          reject(err);
-        }
-      });
+    execute: async (query: string, params: any[] = []): Promise<DbResult> => {
+      try {
+        // Yeni API kullan - runAsync
+        const result = await db.runAsync(query, params).catch((error: any) => {
+          console.error("Query error:", query, error);
+          return { lastInsertRowId: 0, changes: 0 };
+        });
+        
+        return {
+          insertId: result.lastInsertRowId || 0,
+          rowsAffected: result.changes || 0,
+          rows: []
+        };
+      } catch (err) {
+        console.error("Fatal query error:", query, err);
+        return { insertId: 0, rowsAffected: 0, rows: [] };
+      }
     },
     
     // SELECT sorgusu
-    select: <T>(query: string, params: any[] = []): Promise<T[]> => {
-      return new Promise((resolve, reject) => {
-        try {
-          // Yeni API'yi kullanalım - getAllAsync
-          db.getAllAsync<T>(query, params)
-            .then((rows) => {
-              resolve(rows);
-            })
-            .catch((error) => {
-              console.error("Select error:", query, error);
-              reject(error);
-            });
-        } catch (err) {
-          console.error("Fatal select error:", query, err);
-          reject(err);
-        }
-      });
+    select: async <T>(query: string, params: any[] = []): Promise<T[]> => {
+      try {
+        // Yeni API kullan - getAllAsync (jenerik tip argümanı olmadan)
+        const rows = await db.getAllAsync(query, params).catch((error: any) => {
+          console.error("Select error:", query, error);
+          return [];
+        });
+        
+        // Tip dönüşümünü burada yapalım
+        return (rows || []) as T[];
+      } catch (err) {
+        console.error("Fatal select error:", query, err);
+        return [] as T[];
+      }
     },
     
     // INSERT sorgusu
-    insert: (table: string, data: Record<string, any>): Promise<number> => {
+    insert: async (table: string, data: Record<string, any>): Promise<number> => {
       const keys = Object.keys(data);
       const values = Object.values(data);
       const placeholders = keys.map(() => '?').join(',');
       
       const query = `INSERT INTO ${table} (${keys.join(',')}) VALUES (${placeholders})`;
       
-      return new Promise((resolve, reject) => {
-        try {
-          db.runAsync(query, values)
-            .then((result) => {
-              resolve(result.lastInsertRowId || 0);
-            })
-            .catch((error) => {
-              console.error("Insert error:", query, error);
-              reject(error);
-            });
-        } catch (err) {
-          console.error("Fatal insert error:", query, err);
-          reject(err);
-        }
-      });
+      try {
+        const result = await db.runAsync(query, values).catch((error: any) => {
+          console.error("Insert error:", query, error);
+          return { lastInsertRowId: 0 };
+        });
+        
+        return result.lastInsertRowId || 0;
+      } catch (err) {
+        console.error("Fatal insert error:", query, err);
+        return 0;
+      }
     },
     
     // UPDATE sorgusu
-    update: (
+    update: async (
       table: string, 
       data: Record<string, any>, 
       where: string, 
@@ -111,46 +134,38 @@ export function openDatabase(): Database {
       const values = [...Object.values(data), ...params];
       const query = `UPDATE ${table} SET ${setClause} WHERE ${where}`;
       
-      return new Promise((resolve, reject) => {
-        try {
-          db.runAsync(query, values)
-            .then((result) => {
-              resolve(result.changes || 0);
-            })
-            .catch((error) => {
-              console.error("Update error:", query, error);
-              reject(error);
-            });
-        } catch (err) {
-          console.error("Fatal update error:", query, err);
-          reject(err);
-        }
-      });
+      try {
+        const result = await db.runAsync(query, values).catch((error: any) => {
+          console.error("Update error:", query, error);
+          return { changes: 0 };
+        });
+        
+        return result.changes || 0;
+      } catch (err) {
+        console.error("Fatal update error:", query, err);
+        return 0;
+      }
     },
     
     // DELETE sorgusu
-    delete: (
+    delete: async (
       table: string, 
       where: string, 
       params: any[] = []
     ): Promise<number> => {
       const query = `DELETE FROM ${table} WHERE ${where}`;
       
-      return new Promise((resolve, reject) => {
-        try {
-          db.runAsync(query, params)
-            .then((result) => {
-              resolve(result.changes || 0);
-            })
-            .catch((error) => {
-              console.error("Delete error:", query, error);
-              reject(error);
-            });
-        } catch (err) {
-          console.error("Fatal delete error:", query, err);
-          reject(err);
-        }
-      });
+      try {
+        const result = await db.runAsync(query, params).catch((error: any) => {
+          console.error("Delete error:", query, error);
+          return { changes: 0 };
+        });
+        
+        return result.changes || 0;
+      } catch (err) {
+        console.error("Fatal delete error:", query, err);
+        return 0;
+      }
     }
   };
 }
@@ -187,6 +202,5 @@ export const initDatabase = async () => {
     console.log('Veritabanı başarıyla başlatıldı');
   } catch (error) {
     console.error('Veritabanı başlatılırken hata:', error);
-    throw error;
   }
 };

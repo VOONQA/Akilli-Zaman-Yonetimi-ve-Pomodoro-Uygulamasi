@@ -72,6 +72,54 @@ CREATE TABLE IF NOT EXISTS note_folders (
 )
 `;
 
+// Rozet tablosu - sistem tarafından tanımlanan mümkün olan tüm rozetler
+const CREATE_BADGES_TABLE = `
+CREATE TABLE IF NOT EXISTS badges (
+  id TEXT PRIMARY KEY,
+  name TEXT NOT NULL,
+  description TEXT NOT NULL,
+  type TEXT NOT NULL,
+  thresholds TEXT NOT NULL,
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL
+)
+`;
+
+// Kullanıcının kazandığı rozetler tablosu
+const CREATE_USER_BADGES_TABLE = `
+CREATE TABLE IF NOT EXISTS user_badges (
+  id TEXT PRIMARY KEY,
+  badge_id TEXT NOT NULL,
+  level INTEGER DEFAULT 0,
+  progress INTEGER DEFAULT 0,
+  earned_at TEXT NOT NULL,
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL,
+  FOREIGN KEY (badge_id) REFERENCES badges (id) ON DELETE CASCADE
+)
+`;
+
+// Kullanıcı profil bilgileri tablosu
+const CREATE_USER_PROFILE_TABLE = `
+CREATE TABLE IF NOT EXISTS user_profile (
+  id TEXT PRIMARY KEY,
+  display_name TEXT NOT NULL,
+  total_focus_time INTEGER DEFAULT 0,
+  total_tasks_completed INTEGER DEFAULT 0,
+  task_completion_rate REAL DEFAULT 0,
+  total_pomodoro_completed INTEGER DEFAULT 0,
+  perfect_pomodoro_count INTEGER DEFAULT 0,
+  most_productive_day TEXT,
+  most_productive_time TEXT,
+  daily_focus_goal INTEGER DEFAULT 120,
+  weekly_task_goal INTEGER DEFAULT 15,
+  days_streak INTEGER DEFAULT 0,
+  last_active_date TEXT NOT NULL,
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL
+)
+`;
+
 // Veritabanı tablosu oluşturma
 export const initializeDatabase = async (database: Database): Promise<void> => {
   try {
@@ -89,6 +137,11 @@ export const initializeDatabase = async (database: Database): Promise<void> => {
     // Not sisteminin tablolarını oluştur
     await database.execute(CREATE_NOTES_TABLE);
     await database.execute(CREATE_NOTE_FOLDERS_TABLE);
+    
+    // Rozet ve profil tablolarını oluştur
+    await database.execute(CREATE_BADGES_TABLE);
+    await database.execute(CREATE_USER_BADGES_TABLE);
+    await database.execute(CREATE_USER_PROFILE_TABLE);
     
     console.log('Veritabanı tabloları başarıyla oluşturuldu');
   } catch (error) {

@@ -5,6 +5,7 @@ import { useDatabase } from './context/DatabaseContext';
 import LoadingScreen from './components/common/LoadingScreen';
 import { checkApiKey } from './services/chatbot/checkEnv';
 import { initDatabase } from './services/database';
+import { initializeBadgesInDB, ensureDefaultUserProfile } from './services/BadgeService';
 ///
 // Geçici olarak burada tanımlıyoruz, aslında services/database.ts'de olacak
 const initializeTables = async (db: any) => {
@@ -27,6 +28,10 @@ const MainApp: React.FC = () => {
       // db varsa tabloları oluştur
       if (db) {
         await initializeTables(db);
+        // Rozet verilerini yükle
+        await initializeBadgesInDB(db);
+        // Varsayılan kullanıcı profilini oluştur
+        await ensureDefaultUserProfile(db);
       }
     };
 

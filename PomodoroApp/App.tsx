@@ -9,6 +9,7 @@ import { TaskProvider } from './src/context/TaskContext';
 import { TimerProvider } from './src/context/TimerContext';
 import { SettingsProvider } from './src/context/SettingsContext';
 import { StatisticsProvider } from './src/context/StatisticsContext';
+import { BadgeProvider } from './src/context/BadgeContext';
 import { theme } from './src/constants/theme';
 import { ChatProvider } from './src/context/ChatContext';
 import { YouTubeProvider } from './src/context/YouTubeContext';
@@ -27,16 +28,18 @@ export default function App() {
                 <TaskProvider>
                   <TimerProvider>
                     <StatisticsProvider>
-                      <YouTubeProvider>
-                        <NoteProvider>
-                          <View style={styles.container}>
-                            <MainApp />
-                            <ChatButton />
-                            <ChatModal />
-                            <StatusBar style="auto" />
-                          </View>
-                        </NoteProvider>
-                      </YouTubeProvider>
+                      <BadgeProvider>
+                        <YouTubeProvider>
+                          <NoteProvider>
+                            <View style={styles.container}>
+                              <MainApp />
+                              <ChatButton />
+                              <ChatModal />
+                              <StatusBar style="auto" />
+                            </View>
+                          </NoteProvider>
+                        </YouTubeProvider>
+                      </BadgeProvider>
                     </StatisticsProvider>
                   </TimerProvider>
                 </TaskProvider>

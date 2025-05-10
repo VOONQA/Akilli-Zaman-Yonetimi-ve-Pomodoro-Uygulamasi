@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { Task } from '../models/Task';
 import { useTask } from './TaskContext';
+import { useDatabase } from './DatabaseContext';
 
 export enum TimerType {
   POMODORO = 'pomodoro',
@@ -51,6 +52,7 @@ export const TimerProvider: React.FC<{children: React.ReactNode}> = ({ children 
   const [currentTask, setCurrentTask] = useState<Task | null>(null);
   
   const { getTaskById, incrementPomodoroCount, updateTask, incrementTaskFocusTime } = useTask();
+  const { db } = useDatabase();
 
   // Mevcut görevin bilgilerini yükle
   useEffect(() => {
@@ -72,6 +74,42 @@ export const TimerProvider: React.FC<{children: React.ReactNode}> = ({ children 
     loadCurrentTask();
   }, [currentTaskId, getTaskById]);
 
+  // Kullanıcı profilini güncelle
+  const updateUserProfile = async (focusTimeToAdd: number, isCompletedPomodoro: boolean) => {
+    if (!db) return;
+    
+    try {
+      // Önce mevcut profili kontrol et
+      const profileResult = await db.execute('SELECT * FROM user_profile LIMIT 1') as any;
+      
+      // Sonuç kontrolü doğru şekilde yapılmalı
+      if (profileResult && profileResult.rows && profileResult.rows.length > 0) {
+        // Profil varsa güncelle
+        const profile = profileResult.rows.item(0);
+        
+        // Yeni değerleri hesapla
+        const total_focus_time = (profile.total_focus_time || 0) + Math.floor(focusTimeToAdd / 60); // saniyeden dakikaya çevir
+        const total_pomodoro_completed = isCompletedPomodoro ? (profile.total_pomodoro_completed || 0) + 1 : profile.total_pomodoro_completed;
+        
+        // Profili güncelle
+        await db.execute(`
+          UPDATE user_profile
+          SET total_focus_time = ?,
+              total_pomodoro_completed = ?,
+              updated_at = ?
+          WHERE id = ?
+        `, [
+          total_focus_time,
+          total_pomodoro_completed,
+          new Date().toISOString(),
+          profile.id
+        ]);
+      }
+    } catch (error) {
+      console.error('Kullanıcı profili güncellenirken hata:', error);
+    }
+  };
+
   useEffect(() => {
     let interval: ReturnType<typeof setInterval> | null = null; 
 
@@ -90,6 +128,9 @@ export const TimerProvider: React.FC<{children: React.ReactNode}> = ({ children 
                 completedPomodoros: prev.completedPomodoros + 1,
                 todayFocusTime: prev.todayFocusTime + totalDuration
               }));
+              
+              // Kullanıcı profilini güncelle - profil ilerleme verilerini artır
+              updateUserProfile(totalDuration, true);
               
               if (currentTaskId && currentTask) {
                 incrementTaskFocusTime(currentTaskId, totalDuration)

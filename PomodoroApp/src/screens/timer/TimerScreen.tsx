@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, FlatList, Animated, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView, FlatList, Animated, StyleSheet, Modal } from 'react-native';
 import { Ionicons, FontAwesome } from '@expo/vector-icons';
 import { TabScreenProps } from '../../navigation/navigationTypes';
 import { useTimer, TimerType, TimerState } from '../../context/TimerContext';
@@ -124,6 +124,18 @@ const TimerScreen: React.FC<Props> = ({ navigation }) => {
   // YouTube context'ini ekleyelim
   const { setYouTubeModalVisible } = useYouTube();
 
+  // TimerScreen bileşeni içinde eklenecek state
+  const [noteModalVisible, setNoteModalVisible] = useState(false);
+
+  // Not modali açma/kapama işlemleri
+  const openNoteModal = () => {
+    setNoteModalVisible(true);
+  };
+
+  const closeNoteModal = () => {
+    setNoteModalVisible(false);
+  };
+
   // Tamamlanan görevleri yükle
   useEffect(() => {
     const loadCompletedTasks = async () => {
@@ -189,7 +201,12 @@ const TimerScreen: React.FC<Props> = ({ navigation }) => {
     }
   }, [currentTask]);
 
+  // Timer tamamlandığında yapılacak işlemlere rozet kontrolünü ekleyelim
   useEffect(() => {
+    if (timerState === TimerState.COMPLETED && timerType === TimerType.POMODORO) {
+      // Pomodoro tamamlandığında rozet kontrolü yap
+    }
+    
     if (timerState === TimerState.COMPLETED) {
       let nextType: TimerType;
       
@@ -207,7 +224,7 @@ const TimerScreen: React.FC<Props> = ({ navigation }) => {
         changeTimerType(nextType);
       }, 1000);
     }
-  }, [timerState, timerType, currentCycle]);
+  }, [timerState, timerType, currentCycle, changeTimerType]);
 
   // TaskDetail sayfasına navigasyon
   const navigateToTaskDetail = (taskId: string) => {
@@ -273,18 +290,6 @@ const TimerScreen: React.FC<Props> = ({ navigation }) => {
   // YouTube modalını açmak ve kapatmak için fonksiyonlar
   const openYouTubeModal = () => {
     setYouTubeModalVisible(true);
-  };
-
-  // TimerScreen bileşeni içinde eklenecek state
-  const [noteModalVisible, setNoteModalVisible] = useState(false);
-
-  // Not modali açma/kapama işlemleri
-  const openNoteModal = () => {
-    setNoteModalVisible(true);
-  };
-
-  const closeNoteModal = () => {
-    setNoteModalVisible(false);
   };
 
   return (

@@ -17,6 +17,40 @@ interface CountResult {
   count: number;
 }
 
+// Kullanıcı profil tablosunu inspect etmek için panel bileşeni
+const UserProfileTable = ({ userProfile }: { userProfile: any }) => {
+  if (!userProfile) {
+    return (
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Kullanıcı Profili</Text>
+        <Text style={styles.infoText}>Henüz profil bilgisi yok</Text>
+      </View>
+    );
+  }
+
+  return (
+    <View style={styles.section}>
+      <Text style={styles.sectionTitle}>Kullanıcı Profili</Text>
+      <View style={styles.profileCard}>
+        <Text style={styles.profileTitle}>{userProfile.display_name || 'Anonim Kullanıcı'}</Text>
+        <Text style={styles.profileInfo}>ID: {userProfile.id || 'N/A'}</Text>
+        <Text style={styles.profileInfo}>Toplam Odak Süresi: {userProfile.total_focus_time || 0} dk</Text>
+        <Text style={styles.profileInfo}>Tamamlanan Görevler: {userProfile.total_tasks_completed || 0}</Text>
+        <Text style={styles.profileInfo}>Tamamlama Oranı: {Math.round((userProfile.task_completion_rate || 0) * 100)}%</Text>
+        <Text style={styles.profileInfo}>Tamamlanan Pomodorolar: {userProfile.total_pomodoro_completed || 0}</Text>
+        <Text style={styles.profileInfo}>Mükemmel Pomodorolar: {userProfile.perfect_pomodoro_count || 0}</Text>
+        <Text style={styles.profileInfo}>En Verimli Gün: {userProfile.most_productive_day || 'N/A'}</Text>
+        <Text style={styles.profileInfo}>En Verimli Zaman: {userProfile.most_productive_time || 'N/A'}</Text>
+        <Text style={styles.profileInfo}>Günlük Hedef: {userProfile.daily_focus_goal || 0} dk</Text>
+        <Text style={styles.profileInfo}>Haftalık Görev Hedefi: {userProfile.weekly_task_goal || 0}</Text>
+        <Text style={styles.profileInfo}>Günlük Seri: {userProfile.days_streak || 0} gün</Text>
+        <Text style={styles.profileInfo}>Son Aktif: {userProfile.last_active_date || 'N/A'}</Text>
+        <Text style={styles.profileInfo}>Güncelleme: {userProfile.updated_at || 'N/A'}</Text>
+      </View>
+    </View>
+  );
+};
+
 export default function DebugPanel() {
   const { tasks } = useTask();
   const { isLoading, getDailyStats, getWeeklyStats, getMonthlyStats } = useStatistics();
@@ -86,6 +120,45 @@ export default function DebugPanel() {
           ...prev,
           folderCount: folderCount,
           sampleFolders: folderRows
+        }));
+      }
+      
+      // Rozet tablolarını kontrol et
+      if (tablesResult.some((t: TableInfo) => t.name === 'badges')) {
+        const countResult = await db.select<CountResult>(`SELECT COUNT(*) as count FROM badges`);
+        const badgeCount = countResult[0]?.count || 0;
+        
+        const badgeRows = await db.select(`SELECT * FROM badges LIMIT 10`);
+        setDbInfo((prev: any) => ({
+          ...prev,
+          badgeCount: badgeCount,
+          sampleBadges: badgeRows
+        }));
+      }
+      
+      // Kullanıcı rozetlerini kontrol et
+      if (tablesResult.some((t: TableInfo) => t.name === 'user_badges')) {
+        const countResult = await db.select<CountResult>(`SELECT COUNT(*) as count FROM user_badges`);
+        const userBadgeCount = countResult[0]?.count || 0;
+        
+        const userBadgeRows = await db.select(`SELECT * FROM user_badges LIMIT 10`);
+        setDbInfo((prev: any) => ({
+          ...prev,
+          userBadgeCount: userBadgeCount,
+          sampleUserBadges: userBadgeRows
+        }));
+      }
+      
+      // Kullanıcı profil bilgilerini kontrol et
+      if (tablesResult.some((t: TableInfo) => t.name === 'user_profile')) {
+        const countResult = await db.select<CountResult>(`SELECT COUNT(*) as count FROM user_profile`);
+        const userProfileCount = countResult[0]?.count || 0;
+        
+        const userProfileRows = await db.select(`SELECT * FROM user_profile LIMIT 1`);
+        setDbInfo((prev: any) => ({
+          ...prev,
+          userProfileCount: userProfileCount,
+          userProfile: userProfileRows[0] || null
         }));
       }
       
@@ -195,6 +268,29 @@ export default function DebugPanel() {
   return (
     <ScrollView style={styles.container}>
       <Text style={styles.title}>Debug Paneli</Text>
+      
+      {/* İlk olarak Kullanıcı Profili'ni göster */}
+      {dbInfo.userProfile && (
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Kullanıcı Profili</Text>
+          <View style={styles.profileCard}>
+            <Text style={styles.profileTitle}>{dbInfo.userProfile.display_name || 'Anonim Kullanıcı'}</Text>
+            <Text style={styles.profileInfo}>ID: {dbInfo.userProfile.id || 'N/A'}</Text>
+            <Text style={styles.profileInfo}>Toplam Odak Süresi: {dbInfo.userProfile.total_focus_time || 0} dk</Text>
+            <Text style={styles.profileInfo}>Tamamlanan Görevler: {dbInfo.userProfile.total_tasks_completed || 0}</Text>
+            <Text style={styles.profileInfo}>Tamamlama Oranı: {Math.round((dbInfo.userProfile.task_completion_rate || 0) * 100)}%</Text>
+            <Text style={styles.profileInfo}>Tamamlanan Pomodorolar: {dbInfo.userProfile.total_pomodoro_completed || 0}</Text>
+            <Text style={styles.profileInfo}>Mükemmel Pomodorolar: {dbInfo.userProfile.perfect_pomodoro_count || 0}</Text>
+            <Text style={styles.profileInfo}>En Verimli Gün: {dbInfo.userProfile.most_productive_day || 'N/A'}</Text>
+            <Text style={styles.profileInfo}>En Verimli Zaman: {dbInfo.userProfile.most_productive_time || 'N/A'}</Text>
+            <Text style={styles.profileInfo}>Günlük Hedef: {dbInfo.userProfile.daily_focus_goal || 0} dk</Text>
+            <Text style={styles.profileInfo}>Haftalık Görev Hedefi: {dbInfo.userProfile.weekly_task_goal || 0}</Text>
+            <Text style={styles.profileInfo}>Günlük Seri: {dbInfo.userProfile.days_streak || 0} gün</Text>
+            <Text style={styles.profileInfo}>Son Aktif: {dbInfo.userProfile.last_active_date || 'N/A'}</Text>
+            <Text style={styles.profileInfo}>Güncelleme: {dbInfo.userProfile.updated_at || 'N/A'}</Text>
+          </View>
+        </View>
+      )}
       
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Veritabanı Bilgisi</Text>
@@ -321,6 +417,45 @@ export default function DebugPanel() {
               <Text style={styles.folderInfo}>ID: {folder.id}</Text>
               <Text style={styles.folderInfo}>Renk: {folder.color || 'Yok'}</Text>
               <Text style={styles.folderInfo}>Oluşturulma: {folder.created_at}</Text>
+            </View>
+          ))}
+        </View>
+      )}
+      
+      {/* Kullanıcı profil tablosunu daha önce göster */}
+      {/*
+      {dbInfo.userProfile && (
+        <UserProfileTable userProfile={dbInfo.userProfile} />
+      )}
+      */}
+      
+      {/* Diğer tablolar... */}
+      {dbInfo.sampleBadges && (
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Rozet Tablosu ({dbInfo.badgeCount || 0})</Text>
+          
+          {dbInfo.sampleBadges?.map((badge: any, index: number) => (
+            <View key={index} style={styles.badgeCard}>
+              <Text style={styles.badgeTitle}>{badge.name}</Text>
+              <Text style={styles.badgeInfo}>ID: {badge.id}</Text>
+              <Text style={styles.badgeInfo}>Açıklama: {badge.description}</Text>
+              <Text style={styles.badgeInfo}>Tür: {badge.type}</Text>
+              <Text style={styles.badgeInfo}>Eşikler: {badge.thresholds}</Text>
+            </View>
+          ))}
+        </View>
+      )}
+      
+      {dbInfo.sampleUserBadges && (
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Kullanıcı Rozetleri ({dbInfo.userBadgeCount || 0})</Text>
+          
+          {dbInfo.sampleUserBadges?.map((userBadge: any, index: number) => (
+            <View key={index} style={styles.userBadgeCard}>
+              <Text style={styles.badgeInfo}>Rozet ID: {userBadge.badge_id}</Text>
+              <Text style={styles.badgeInfo}>Seviye: {userBadge.level}</Text>
+              <Text style={styles.badgeInfo}>İlerleme: {userBadge.progress}</Text>
+              <Text style={styles.badgeInfo}>Kazanma Tarihi: {userBadge.earned_at}</Text>
             </View>
           ))}
         </View>
@@ -478,5 +613,51 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#666',
     marginBottom: 4,
+  },
+  badgeCard: {
+    marginBottom: 12,
+    padding: 12,
+    backgroundColor: '#e3f2fd',
+    borderRadius: 4,
+    borderLeftWidth: 4,
+    borderLeftColor: '#2196F3',
+  },
+  badgeTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginBottom: 8,
+    color: '#333',
+  },
+  badgeInfo: {
+    fontSize: 14,
+    color: '#666',
+    marginBottom: 4,
+  },
+  userBadgeCard: {
+    marginBottom: 12,
+    padding: 12,
+    backgroundColor: '#e8eaf6',
+    borderRadius: 4,
+    borderLeftWidth: 4,
+    borderLeftColor: '#3f51b5',
+  },
+  profileCard: {
+    marginBottom: 12,
+    padding: 12,
+    backgroundColor: '#E1F5FE',
+    borderRadius: 8,
+    borderLeftWidth: 4,
+    borderLeftColor: '#039BE5',
+  },
+  profileTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 10,
+    color: '#01579B',
+  },
+  profileInfo: {
+    fontSize: 14,
+    color: '#333',
+    marginBottom: 6,
   },
 });

@@ -286,7 +286,7 @@ export const TaskProvider: React.FC<TaskProviderProps> = ({ children }) => {
     };
     
     try {
-      // Veritabanında güncelle
+      // Veritabanında güncelle - total_focus_time sütunu olmadığı için bunu çıkaralım
       const data: Record<string, any> = {
         title: updatedTask.title,
         description: updatedTask.description,
@@ -294,7 +294,6 @@ export const TaskProvider: React.FC<TaskProviderProps> = ({ children }) => {
         is_completed: updatedTask.isCompleted ? 1 : 0,
         pomodoro_count: updatedTask.pomodoroCount,
         completed_pomodoros: updatedTask.completedPomodoros,
-        total_focus_time: updatedTask.totalFocusTime,
         tags: JSON.stringify(updatedTask.tags),
         updated_at: formatDateForSQL(updatedTask.updatedAt)
       };
