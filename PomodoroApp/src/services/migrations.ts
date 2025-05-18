@@ -153,7 +153,7 @@ export const initializeDatabase = async (database: Database): Promise<void> => {
 // Veritabanı versiyonunu kontrol etme ve güncelleme
 export const migrateDatabase = async (database: Database): Promise<void> => {
   try {
-    // Şu anda basit bir yapılandırma, gelecekte migration yapısı eklenebilir
+    // Tabloları oluştur
     await initializeDatabase(database);
   } catch (error) {
     console.error('Veritabanı migrasyonu sırasında hata:', error);

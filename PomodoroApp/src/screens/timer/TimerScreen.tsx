@@ -1,6 +1,8 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, FlatList, Animated, StyleSheet, Modal } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView, FlatList, Animated, StyleSheet, Modal, Platform } from 'react-native';
+import { Button } from 'react-native-paper';
 import { Ionicons, FontAwesome } from '@expo/vector-icons';
+import * as Notifications from 'expo-notifications';
 import { TabScreenProps } from '../../navigation/navigationTypes';
 import { useTimer, TimerType, TimerState } from '../../context/TimerContext';
 import { TimerDisplay, ControlPanel, ProgressRing } from '../../components/timer';
@@ -12,6 +14,18 @@ import TaskItem from '../../components/tasks/TaskItem';
 import { useYouTube } from '../../context/YouTubeContext';
 import { YouTubeModal } from '../../components/youtube';
 import NoteModal from '../../components/notes/NoteModal';
+import { useSettings } from '../../context/SettingsContext';
+
+// Bildirimlerin uygulamada nasıl gösterileceğini ayarla
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldShowAlert: true,
+    shouldPlaySound: true,
+    shouldSetBadge: false,
+    shouldShowBanner: true,
+    shouldShowList: true,
+  }),
+});
 
 type Props = TabScreenProps<'Timer'>;
 
@@ -72,7 +86,16 @@ const localStyles = StyleSheet.create({
     marginTop: 10,
     marginBottom: 30,
     alignItems: 'center',
-  }
+  },
+  cycleInfoContainer: {
+    alignItems: 'center',
+    marginVertical: 10,
+  },
+  cycleInfoText: {
+    fontSize: 14,
+    color: '#666',
+    marginVertical: 2,
+  },
 });
 
 const TimerScreen: React.FC<Props> = ({ navigation }) => {
@@ -292,6 +315,117 @@ const TimerScreen: React.FC<Props> = ({ navigation }) => {
     setYouTubeModalVisible(true);
   };
 
+  const { settings } = useSettings();
+  
+  // Bildirim izin kontrolü
+  const getNotificationChannelId = () => {
+    // Her bildirimde random kanal ismi (timestamp ekliyoruz)
+    return `timer-channel-${settings.notifications.vibrationEnabled ? 'vib' : 'novib'}-${settings.notifications.soundType}-${Date.now()}`;
+  };
+
+  const vibrationPattern = [0, 4000, 500, 4000, 500, 4000, 500, 4000];
+
+  const getSoundFile = () => {
+    if (settings.notifications.soundType === 'default') return 'default';
+    if (settings.notifications.soundType === 'bell') return 'bell.wav';
+    if (settings.notifications.soundType === 'chime') return 'chime.wav';
+    return 'default';
+  };
+
+  const sendNotification = async (title: string, body: string) => {
+    try {
+      // Sessiz saatler kontrolü - Şu anki saat sessiz saatler arasında mı?
+      const now = new Date();
+      const currentHour = now.getHours();
+      
+      // Android için ekstra özellikler ekle
+      if (Platform.OS === 'android') {
+        const channelId = getNotificationChannelId();
+        await Notifications.setNotificationChannelAsync(channelId, {
+          name: 'Timer Bildirimleri',
+          importance: Notifications.AndroidImportance.HIGH,
+          vibrationPattern: vibrationPattern,
+          sound: getSoundFile(),
+          enableVibrate: settings.notifications.vibrationEnabled,
+        });
+
+        const notificationContent: Notifications.NotificationContentInput = {
+          title,
+          body,
+          data: { screen: 'Timer' },
+          vibrate: settings.notifications.vibrationEnabled ? vibrationPattern : [],
+        };
+        if (settings.notifications.soundEnabled) {
+          notificationContent.sound = getSoundFile();
+        }
+        await Notifications.scheduleNotificationAsync({
+          content: notificationContent,
+          trigger: { channelId }
+        });
+        console.log('Bildirim başarıyla gönderildi');
+      }
+    } catch (error) {
+      console.error('Bildirim gönderilirken hata oluştu:', error);
+    }
+  };
+  
+  // Timer tamamlandığında bildirimleri göster
+  useEffect(() => {
+    if (timerState === TimerState.COMPLETED) {
+      // Timer tipine göre bildirim göster
+      if (timerType === TimerType.POMODORO) {
+        sendNotification(
+          'Pomodoro Tamamlandı!',
+          'Tebrikler! Şimdi bir mola verme zamanı geldi.'
+        );
+      } else if (timerType === TimerType.SHORT_BREAK) {
+        sendNotification(
+          'Kısa Mola Tamamlandı!',
+          'Çalışmaya devam etmek için hazır mısın?'
+        );
+      } else if (timerType === TimerType.LONG_BREAK) {
+        sendNotification(
+          'Uzun Mola Tamamlandı!',
+          'Dinlendin mi? Yeni bir pomodoro setine başlamaya hazırsın!'
+        );
+      }
+      
+      // Otomatik başlama durumunu kontrol et
+      const willAutoStart = 
+        (timerType === TimerType.POMODORO && settings.timer.autoStartBreaks) ||
+        ((timerType === TimerType.SHORT_BREAK || timerType === TimerType.LONG_BREAK) && 
+          settings.timer.autoStartPomodoros);
+      
+      if (willAutoStart) {
+        // Otomatik başlama bildirimi
+        const nextMode = timerType === TimerType.POMODORO ? 'mola' : 'pomodoro';
+        sendNotification(
+          'Otomatik Başlatma', 
+          `${nextMode.charAt(0).toUpperCase() + nextMode.slice(1)} otomatik olarak başlatılacak.`
+        );
+      }
+    }
+  }, [timerState, timerType, settings.timer.autoStartBreaks, settings.timer.autoStartPomodoros]);
+  
+  // Bildirime tıklanırsa yapılacak işlemler
+  useEffect(() => {
+    // Bildirim yanıtlarını dinle
+    const subscription = Notifications.addNotificationResponseReceivedListener(response => {
+      // Gelen bildirime tıklandığında uygulamayı ön plana getir ve Timer ekranına yönlendir
+      if (response.notification.request.content.data?.screen === 'Timer') {
+        navigation.navigate('Timer');
+      }
+    });
+    
+    // Temizleme işlemi
+    return () => {
+      subscription.remove();
+    };
+  }, [navigation]);
+
+  // Uzun mola öncesi kalan pomodoro sayısını hesapla
+  const remainingUntilLongBreak = settings.timer.pomodorosUntilLongBreak - (stats.completedPomodoros % settings.timer.pomodorosUntilLongBreak);
+
   return (
     <View style={baseStyles.container}>
       <ScrollView style={baseStyles.scrollContainer} contentContainerStyle={baseStyles.scrollContentContainer}>
@@ -400,6 +534,17 @@ const TimerScreen: React.FC<Props> = ({ navigation }) => {
             />
           </ProgressRing>
         </View>
+        
+        {timerType === TimerType.POMODORO && (
+          <View style={localStyles.cycleInfoContainer}>
+            <Text style={localStyles.cycleInfoText}>
+              Bu oturumda {stats.completedPomodoros} pomodoro tamamladınız
+            </Text>
+            <Text style={localStyles.cycleInfoText}>
+              Uzun molaya {remainingUntilLongBreak} pomodoro kaldı
+            </Text>
+          </View>
+        )}
 
         <ControlPanel
           timerState={timerState}

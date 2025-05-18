@@ -31,6 +31,18 @@
         {
           "calendarPermission": "Takvim bilgilerinize erişime ihtiyacımız var."
         }
+      ],
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/adaptive-icon.png",
+          "color": "#FF5722",
+          "sounds": [
+            "./assets/sounds/bell.wav",
+            "./assets/sounds/chime.wav"
+          ],
+          "defaultChannel": "timer-channel"
+        }
       ]
     ],
     "assetBundlePatterns": [

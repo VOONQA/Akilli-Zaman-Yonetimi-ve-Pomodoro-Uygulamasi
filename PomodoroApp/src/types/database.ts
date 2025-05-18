@@ -28,6 +28,7 @@ export interface TaskTable {
   is_completed: number; // 0 = false, 1 = true
   pomodoro_count: number;
   completed_pomodoros: number;
+  total_focus_time: number; // Eklendi
   tags: string | null; // JSON formatında array
   created_at: string; // ISO tarih formatında
   updated_at: string; // ISO tarih formatında

@@ -263,6 +263,7 @@ export const TaskProvider: React.FC<TaskProviderProps> = ({ children }) => {
       });
       
       setTasks(prev => [newTask, ...prev]);
+      
       return newTask;
     } catch (err) {
       console.error('Görev eklenirken hata:', err);

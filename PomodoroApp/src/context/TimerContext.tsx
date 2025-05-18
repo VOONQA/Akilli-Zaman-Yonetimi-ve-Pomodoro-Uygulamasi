@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { Task } from '../models/Task';
 import { useTask } from './TaskContext';
 import { useDatabase } from './DatabaseContext';
+import { useSettings } from './SettingsContext';
 
 export enum TimerType {
   POMODORO = 'pomodoro',
@@ -22,6 +23,7 @@ type TimerContextType = {
   timeRemaining: number;
   totalDuration: number;
   currentCycle: number;
+  completedPomodoros: number;
   currentTask: Task | null;
   stats: {
     completedPomodoros: number;
@@ -41,18 +43,28 @@ const TimerContext = createContext<TimerContextType | undefined>(undefined);
 export const TimerProvider: React.FC<{children: React.ReactNode}> = ({ children }) => {
   const [timerState, setTimerState] = useState<TimerState>(TimerState.READY);
   const [timerType, setTimerType] = useState<TimerType>(TimerType.POMODORO);
-  const [timeRemaining, setTimeRemaining] = useState(25 * 60);
-  const [totalDuration, setTotalDuration] = useState(25 * 60);
+  const [timeRemaining, setTimeRemaining] = useState(0);
+  const [totalDuration, setTotalDuration] = useState(0);
   const [currentCycle, setCurrentCycle] = useState(1);
+  const [completedPomodoros, setCompletedPomodoros] = useState(0);
   const [stats, setStats] = useState({
     completedPomodoros: 0,
     todayFocusTime: 0
   });
   const [currentTaskId, setCurrentTaskId] = useState<string | null>(null);
   const [currentTask, setCurrentTask] = useState<Task | null>(null);
+  const [lastBreakType, setLastBreakType] = useState<TimerType | null>(null);
   
   const { getTaskById, incrementPomodoroCount, updateTask, incrementTaskFocusTime } = useTask();
   const { db } = useDatabase();
+  const { settings } = useSettings();
+
+  // Ayarları kullanarak timer'ı başlangıçta ayarla
+  useEffect(() => {
+    const duration = settings.timer.pomodoroMinutes * 60;
+    setTimeRemaining(duration);
+    setTotalDuration(duration);
+  }, [settings.timer.pomodoroMinutes]);
 
   // Mevcut görevin bilgilerini yükle
   useEffect(() => {
@@ -110,6 +122,50 @@ export const TimerProvider: React.FC<{children: React.ReactNode}> = ({ children 
     }
   };
 
+  // Timer tamamlandığında yapılacak işlemleri yöneten fonksiyon
+  const handleTimerComplete = () => {
+    // MOLADAN pomodoroya geçiş yapıyorsak önce kontrol edelim
+    if (timerType === TimerType.SHORT_BREAK || timerType === TimerType.LONG_BREAK) {
+      // Bu bir mola döngüsünden çıkış, direk pomodoro moduna geç
+      changeTimerType(TimerType.POMODORO);
+      
+      // Otomatik başlatma ayarı açıksa başlat
+      if (settings.timer.autoStartPomodoros) {
+        setTimeout(() => startTimer(), 500);
+      }
+      return; // Buradan sonraki kodun çalışmasını engelleyelim
+    }
+    
+    // Buraya geldiysek bir POMODORO tamamlanmıştır
+    // Tamamlanan pomodoro sayısını artır
+    const newCompletedPomodoros = completedPomodoros + 1;
+    setCompletedPomodoros(newCompletedPomodoros);
+    
+    // DÜZELTME: Mod operatörü yerine doğrudan kontrol ekleyelim
+    // Uzun mola zamanı geldi mi?
+    // Şu anki pomodoro sayımız, ayarlardaki uzun mola için gerekli sayının tam katı mı?
+    const breakType = (newCompletedPomodoros % settings.timer.pomodorosUntilLongBreak === 0)
+      ? TimerType.LONG_BREAK  // Evet, uzun mola zamanı geldi
+      : TimerType.SHORT_BREAK; // Hayır, normal kısa mola zamanı
+      
+    // Göstermelik olarak bir log verelim
+    console.log('Tamamlanan pomodoro sayısı:', newCompletedPomodoros);
+    console.log('Uzun mola öncesi pomodoro sayısı:', settings.timer.pomodorosUntilLongBreak);
+    console.log('Mod hesabı:', newCompletedPomodoros % settings.timer.pomodorosUntilLongBreak);
+    console.log('Seçilen mola tipi:', breakType);
+      
+    // Seçilen mola tipine geç
+    changeTimerType(breakType);
+    
+    // Otomatik başlatma ayarı açıksa başlat
+    if (settings.timer.autoStartBreaks) {
+      setTimeout(() => startTimer(), 500);
+    }
+      
+    // Döngüyü bir artır
+    setCurrentCycle(currentCycle + 1);
+  };
+
   useEffect(() => {
     let interval: ReturnType<typeof setInterval> | null = null; 
 
@@ -129,9 +185,10 @@ export const TimerProvider: React.FC<{children: React.ReactNode}> = ({ children 
                 todayFocusTime: prev.todayFocusTime + totalDuration
               }));
               
-              // Kullanıcı profilini güncelle - profil ilerleme verilerini artır
+              // Kullanıcı profilini güncelle
               updateUserProfile(totalDuration, true);
               
+              // Görev ile ilgili işlemleri burada yap
               if (currentTaskId && currentTask) {
                 incrementTaskFocusTime(currentTaskId, totalDuration)
                   .then(() => {
@@ -172,10 +229,20 @@ export const TimerProvider: React.FC<{children: React.ReactNode}> = ({ children 
     return () => {
       if (interval !== null) {
         clearInterval(interval);
-        interval = null;
       }
     };
-  }, [timerState, timerType, totalDuration, currentTaskId, currentTask, incrementPomodoroCount, updateTask, incrementTaskFocusTime]);
+  }, [timerState, timerType, totalDuration, currentTaskId, currentTask]);
+
+  // Süre tamamlandığında handleTimerComplete fonksiyonunu çağır
+  useEffect(() => {
+    if (timerState === TimerState.COMPLETED) {
+      // Zaman 0.5 saniye gecikme ekleyerek handleTimerComplete'i çağır
+      // Bu, kullanıcıya "tamamlandı" durumunu görme şansı verir
+      setTimeout(() => {
+        handleTimerComplete();
+      }, 500);
+    }
+  }, [timerState]);
 
   const startTimer = () => {
     setTimerState(TimerState.RUNNING);
@@ -200,13 +267,13 @@ export const TimerProvider: React.FC<{children: React.ReactNode}> = ({ children 
     
     switch (type) {
       case TimerType.POMODORO:
-        newDuration = 25 * 60;
+        newDuration = settings.timer.pomodoroMinutes * 60;
         break;
       case TimerType.SHORT_BREAK:
-        newDuration = 5 * 60;
+        newDuration = settings.timer.shortBreakMinutes * 60;
         break;
       case TimerType.LONG_BREAK:
-        newDuration = 15 * 60;
+        newDuration = settings.timer.longBreakMinutes * 60;
         break;
     }
     
@@ -219,8 +286,8 @@ export const TimerProvider: React.FC<{children: React.ReactNode}> = ({ children 
     setTimerType(TimerType.POMODORO);
     setCurrentTaskId(task.id);
     setCurrentTask(task);
-    setTimeRemaining(25 * 60);
-    setTotalDuration(5 * 60);
+    setTimeRemaining(settings.timer.pomodoroMinutes * 60);
+    setTotalDuration(settings.timer.pomodoroMinutes * 60);
     setTimerState(TimerState.RUNNING);
   };
 
@@ -229,12 +296,31 @@ export const TimerProvider: React.FC<{children: React.ReactNode}> = ({ children 
     setCurrentTask(null);
   };
 
+  const initializeTimer = (type: TimerType) => {
+    switch (type) {
+      case 'pomodoro':
+        setTimerType(TimerType.POMODORO);
+        setTimeRemaining(settings.timer.pomodoroMinutes * 60);
+        break;
+      case 'shortBreak':
+        setTimerType(TimerType.SHORT_BREAK);
+        setTimeRemaining(settings.timer.shortBreakMinutes * 60);
+        break;
+      case 'longBreak':
+        setTimerType(TimerType.LONG_BREAK);
+        setTimeRemaining(settings.timer.longBreakMinutes * 60);
+        break;
+    }
+    setTimerState(TimerState.READY);
+  };
+
   const value = {
     timerState,
     timerType,
     timeRemaining,
     totalDuration,
     currentCycle,
+    completedPomodoros,
     currentTask,
     stats,
     startTimer,
