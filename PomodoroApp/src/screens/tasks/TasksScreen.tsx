@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { View, Text, TouchableOpacity, Modal, ActivityIndicator, Alert, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, Modal, ActivityIndicator, Alert, StyleSheet, PanResponder } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { TabScreenProps } from '../../navigation/navigationTypes';
 import { useTask } from '../../context/TaskContext';
@@ -8,7 +8,7 @@ import { useFocusEffect } from '@react-navigation/native';
 import { styles } from './styles';
 import { TaskList } from '../../components/tasks';
 import TaskCalendar from '../../components/calender/TaskCalender';
-import DebugPanel from '../../components/common/DebugPanel';
+import { TAB_BAR_HEIGHT } from '../../navigation/TabNavigator';
 
 type Props = TabScreenProps<'Tasks'>;
 
@@ -20,7 +20,6 @@ const TasksScreen: React.FC<Props> = ({ navigation, route }) => {
     initialFilter as 'all' | 'today' | 'upcoming' | 'completed'
   );
   const [showCalendar, setShowCalendar] = useState(false);
-  const [showDebug, setShowDebug] = useState(false);
   const [selectedTasks, setSelectedTasks] = useState<{[key: string]: boolean}>({});
   const [selectionMode, setSelectionMode] = useState(false);
   
@@ -187,8 +186,24 @@ const TasksScreen: React.FC<Props> = ({ navigation, route }) => {
     return unsubscribe;
   }, [navigation]);
   
+  // Swipe gesture
+  const panResponder = PanResponder.create({
+    onMoveShouldSetPanResponder: (evt, gestureState) => {
+      return Math.abs(gestureState.dx) > Math.abs(gestureState.dy) && Math.abs(gestureState.dx) > 30;
+    },
+    onPanResponderRelease: (evt, gestureState) => {
+      if (gestureState.dx > 50) {
+        // Sağa kaydır - Timer'a git
+        navigation.navigate('Timer');
+      } else if (gestureState.dx < -50) {
+        // Sola kaydır - Statistics'e git
+        navigation.navigate('Statistics');
+      }
+    },
+  });
+  
   return (
-    <View style={{ flex: 1 }}>
+    <View style={{ flex: 1 }} {...panResponder.panHandlers}>
       <View style={styles.container}>
         <View style={styles.header}>
           {selectionMode ? (
@@ -273,17 +288,6 @@ const TasksScreen: React.FC<Props> = ({ navigation, route }) => {
           onToggleSelection={activateSelectionMode}
         />
         
-        {tasks.length === 0 && !loading && (
-          <View style={styles.emptyContainer}>
-            <TouchableOpacity 
-              style={styles.createButton}
-              onPress={() => navigateToEditTask()}
-            >
-              <Text style={styles.createButtonText}>Yeni Görev Oluştur</Text>
-            </TouchableOpacity>
-          </View>
-        )}
-        
         {/* Sağ alt köşedeki takvim butonu */}
         <TouchableOpacity
           style={styles.floatingCalendarButton}
@@ -313,45 +317,6 @@ const TasksScreen: React.FC<Props> = ({ navigation, route }) => {
           </View>
         </Modal>
       </View>
-      
-      {/* Debug modalı */}
-      {showDebug && (
-        <Modal 
-          visible={showDebug}
-          animationType="slide"
-          onRequestClose={() => setShowDebug(false)}
-        >
-          <View style={{ flex: 1 }}>
-            <TouchableOpacity 
-              onPress={() => setShowDebug(false)}
-              style={{ padding: 16, alignItems: 'flex-end' }}
-            >
-              <Text style={{ color: 'blue', fontSize: 16 }}>Kapat</Text>
-            </TouchableOpacity>
-            <DebugPanel />
-          </View>
-        </Modal>
-      )}
-      
-      {/* Debug buton */}
-      <TouchableOpacity
-        style={{
-          position: 'absolute',
-          bottom: '50%',  // Ortalamak için
-          right: '50%',   // Ortalamak için
-          transform: [{ translateX: 30 }, { translateY: 30 }], // Butonun yarı boyutu kadar kaydır
-          backgroundColor: '#666',
-          borderRadius: 30,
-          width: 60,
-          height: 60,
-          justifyContent: 'center',
-          alignItems: 'center',
-          zIndex: 1000, // Diğer öğelerin üzerinde olmasını sağlar
-        }}
-        onPress={() => setShowDebug(true)}
-      >
-        <Text style={{ color: 'white', fontSize: 12, fontWeight: 'bold' }}>DEBUG</Text>
-      </TouchableOpacity>
     </View>
   );
 };

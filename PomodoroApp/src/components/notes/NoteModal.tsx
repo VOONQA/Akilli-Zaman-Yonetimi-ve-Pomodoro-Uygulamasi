@@ -403,11 +403,11 @@ const NoteModal: React.FC<NoteModalProps> = ({ visible, onClose }) => {
   return (
     <Modal
       visible={visible}
-      animationType="slide"
       transparent={false}
+      animationType="slide"
       onRequestClose={onClose}
     >
-      <SafeAreaView style={styles.container}>
+      <View style={styles.container}>
         <KeyboardAvoidingView 
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
           style={styles.keyboardView}
@@ -467,7 +467,7 @@ const NoteModal: React.FC<NoteModalProps> = ({ visible, onClose }) => {
            activeView === 'editor' ? renderEditor() :
            activeView === 'folders' ? renderFolders() : null}
         </KeyboardAvoidingView>
-      </SafeAreaView>
+      </View>
 
       {/* Modern klasör oluşturma modalı */}
       <Modal

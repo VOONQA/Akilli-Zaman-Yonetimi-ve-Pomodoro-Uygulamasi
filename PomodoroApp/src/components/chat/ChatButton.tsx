@@ -29,7 +29,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     right: 20,
     bottom: 70, // Tab Navigator'ın üzerinde
-    backgroundColor: '#FF5722',
+    backgroundColor: '#5E60CE',
     width: 50,
     height: 50,
     borderRadius: 25,

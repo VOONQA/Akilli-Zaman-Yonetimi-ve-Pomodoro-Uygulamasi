@@ -187,7 +187,8 @@ const TaskCalendar: React.FC<TaskCalendarProps> = ({ onDateSelect, hideTaskModal
     if (tasks.length === 0) return {};
     
     const hasIncompleteTask = tasks.some(task => !task.isCompleted);
-    return { backgroundColor: hasIncompleteTask ? '#FFF3E0' : '#E8F5E9' };
+    // Tamamlanmamış görevler için açık mor arka plan, tamamlananlar için açık yeşil
+    return { backgroundColor: hasIncompleteTask ? '#EDEAFF' : '#E8F5E9' }; // #FFF3E0 -> #EDEAFF
   };
   
   // Bugünün tarihini kontrol et
@@ -505,14 +506,14 @@ const styles = StyleSheet.create({
   },
   todayDay: {
     borderWidth: 1,
-    borderColor: '#FF5722',
+    borderColor: '#5E60CE',
   },
   todayDayText: {
-    color: '#FF5722',
+    color: '#5E60CE',
     fontWeight: 'bold',
   },
   selectedDay: {
-    backgroundColor: '#FF5722',
+    backgroundColor: '#5E60CE',
   },
   selectedDayText: {
     color: '#fff',
@@ -525,7 +526,7 @@ const styles = StyleSheet.create({
     minWidth: 16,
     height: 16,
     borderRadius: 8,
-    backgroundColor: '#FF9800',
+    backgroundColor: '#5E60CE',
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 2,
@@ -580,7 +581,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     marginBottom: 8,
     borderLeftWidth: 3,
-    borderLeftColor: '#2196F3',
+    borderLeftColor: '#5E60CE',
   },
   completedTaskItem: {
     borderLeftColor: '#4CAF50',
@@ -612,7 +613,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#2196F3',
+    backgroundColor: '#5E60CE',
     padding: 12,
     borderRadius: 8,
   },
@@ -631,7 +632,7 @@ const styles = StyleSheet.create({
   aiButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#2196F3',
+    backgroundColor: '#5E60CE',
     paddingVertical: 8,
     paddingHorizontal: 12,
     borderRadius: 8,

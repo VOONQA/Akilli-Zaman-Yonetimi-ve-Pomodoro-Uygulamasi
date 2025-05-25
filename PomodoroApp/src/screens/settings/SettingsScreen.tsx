@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Modal, ScrollView, Alert, TextInput, Platform } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Modal, ScrollView, Alert, TextInput, Platform, PanResponder } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { TabScreenProps } from '../../navigation/navigationTypes';
 import ProfileScreen from '../profile/ProfileScreen';
@@ -11,10 +11,12 @@ import SliderItem from '../../components/settings/SliderItem';
 import { useTheme } from 'react-native-paper';
 import Slider from '@react-native-community/slider';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useTabBarSpace } from '../../hooks/useTabBarSpace';
 
 type Props = TabScreenProps<'Settings'>;
 
 const SettingsScreen: React.FC<Props> = ({ navigation }) => {
+  const { containerStyle, TabBarSpacer } = useTabBarSpace();
   const [profileModalVisible, setProfileModalVisible] = useState(false);
   const { db, isLoading } = useDatabase();
   const { settings, updateTimerSettings, updateNotificationSettings, togglePremium } = useSettings();
@@ -104,8 +106,21 @@ const SettingsScreen: React.FC<Props> = ({ navigation }) => {
     }));
   };
 
+  // Swipe gesture
+  const panResponder = PanResponder.create({
+    onMoveShouldSetPanResponder: (evt, gestureState) => {
+      return Math.abs(gestureState.dx) > Math.abs(gestureState.dy) && Math.abs(gestureState.dx) > 30;
+    },
+    onPanResponderRelease: (evt, gestureState) => {
+      if (gestureState.dx > 50) {
+        // Sağa kaydır - Statistics'e git
+        navigation.navigate('Statistics');
+      }
+    },
+  });
+
   return (
-    <View style={[styles.container, { backgroundColor: colors.background }]}>
+    <View style={[styles.container, { backgroundColor: colors.background }]} {...panResponder.panHandlers}>
       <View style={[styles.header, { backgroundColor: colors.surface }]}>
         <Text style={[styles.title, { color: colors.onSurface }]}>Ayarlar</Text>
         <TouchableOpacity 
@@ -116,7 +131,7 @@ const SettingsScreen: React.FC<Props> = ({ navigation }) => {
         </TouchableOpacity>
       </View>
       
-      <ScrollView style={styles.content}>
+      <ScrollView style={[styles.content, containerStyle]}>
         {/* Zamanlayıcı Ayarları */}
         <View style={[styles.sectionContainer, { backgroundColor: colors.surface }]}>
           <Text style={[styles.sectionTitle, { color: colors.onSurface }]}>Zamanlayıcı Ayarları</Text>
@@ -323,6 +338,9 @@ const SettingsScreen: React.FC<Props> = ({ navigation }) => {
             <Ionicons name="chevron-forward" size={20} color="#999" />
           </TouchableOpacity>
         </View>
+        
+        {/* Tab bar için ek boşluk */}
+        <TabBarSpacer />
       </ScrollView>
 
       {/* Profil Modal */}

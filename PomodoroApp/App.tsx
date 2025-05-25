@@ -14,9 +14,10 @@ import { ThemeProvider, useAppTheme } from './src/context/ThemeContext';
 import { ChatProvider } from './src/context/ChatContext';
 import { YouTubeProvider } from './src/context/YouTubeContext';
 import { NoteProvider } from './src/context/NoteContext';
+import { AuthProvider } from './src/context/AuthContext';
 import ChatButton from './src/components/chat/ChatButton';
 import ChatModal from './src/components/chat/ChatModal';
-///
+
 // PaperProvider'ı ThemeProvider'dan sonra kullanmak için ayrı bir bileşen
 const ThemedApp = () => {
   const { theme } = useAppTheme();
@@ -47,6 +48,7 @@ const ThemedApp = () => {
 export default function App() {
   return (
     <SafeAreaProvider>
+      <AuthProvider>
       <DatabaseProvider>
         <ChatProvider>
           <SettingsProvider>
@@ -68,6 +70,7 @@ export default function App() {
           </SettingsProvider>
         </ChatProvider>
       </DatabaseProvider>
+      </AuthProvider>
     </SafeAreaProvider>
   );
 }

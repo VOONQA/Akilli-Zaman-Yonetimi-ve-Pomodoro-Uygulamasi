@@ -244,43 +244,13 @@ const YouTubeModal: React.FC<YouTubeModalProps> = ({ onClose }) => {
 
       {/* Minimize edilmiş oynatıcı */}
       {minimizePlayer && currentVideo && (
-        <Modal
-          animationType="slide"
-          transparent={true}
-          visible={minimizePlayer}
-          onRequestClose={handleExpandModal}
+        <TouchableOpacity 
+          style={styles.miniPlayerContainer}
+          onPress={handleExpandModal}
         >
-          <View style={styles.minimizedContainer}>
-            <TouchableOpacity 
-              style={styles.minimizedContent}
-              onPress={handleExpandModal}
-            >
-              <Image 
-                source={{ uri: currentVideo.thumbnail }} 
-                style={styles.minimizedThumbnail} 
-              />
-              <Text style={styles.minimizedTitle} numberOfLines={1}>
-                {currentVideo.title}
-              </Text>
-              <TouchableOpacity 
-                style={styles.minimizedPlayButton}
-                onPress={() => setIsPlaying(!isPlaying)}
-              >
-                <Ionicons 
-                  name={isPlaying ? "pause" : "play"} 
-                  size={24} 
-                  color="#333" 
-                />
-              </TouchableOpacity>
-              <TouchableOpacity 
-                style={styles.minimizedCloseButton}
-                onPress={handleStopVideo}
-              >
-                <Ionicons name="close" size={24} color="#333" />
-              </TouchableOpacity>
-            </TouchableOpacity>
-          </View>
-        </Modal>
+          {/* Mini oynatıcı kodu */}
+          {/* ... */}
+        </TouchableOpacity>
       )}
     </>
   );
@@ -339,7 +309,7 @@ const styles = StyleSheet.create({
     marginHorizontal: 10,
     marginVertical: 8,
   },
-  minimizedContainer: {
+  miniPlayerContainer: {
     position: 'absolute',
     bottom: 0,
     left: 0,
@@ -353,35 +323,6 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 5,
   },
-  minimizedContent: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: 15,
-  },
-  minimizedThumbnail: {
-    width: 80,
-    height: 80,
-    borderRadius: 5,
-    marginRight: 10,
-  },
-  minimizedTitle: {
-    flex: 1,
-    fontSize: 14,
-    fontWeight: 'bold',
-    color: '#333',
-    marginRight: 10,
-  },
-  minimizedPlayButton: {
-    padding: 5,
-    backgroundColor: '#333',
-    borderRadius: 15,
-  },
-  minimizedCloseButton: {
-    padding: 5,
-    backgroundColor: '#333',
-    borderRadius: 15,
-  }
 });
 
 export default YouTubeModal;

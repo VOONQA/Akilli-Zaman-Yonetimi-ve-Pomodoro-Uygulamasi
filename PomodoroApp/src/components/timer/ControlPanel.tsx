@@ -74,7 +74,7 @@ const styles = StyleSheet.create({
     marginHorizontal: 10,
   },
   mainButton: {
-    backgroundColor: '#FF5722',
+    backgroundColor: '#5E60CE',
     width: 70,
     height: 70,
   },

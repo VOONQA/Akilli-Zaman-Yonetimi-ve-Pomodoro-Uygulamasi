@@ -1,9 +1,9 @@
-import React, { useEffect, useRef } from 'react';
-import { View, StyleSheet, Animated } from 'react-native';
+import React, { useState, useEffect, useRef } from 'react';
+import { View, StyleSheet } from 'react-native';
 import Svg, { Circle } from 'react-native-svg';
+import { useTimer, TimerState } from '../../context/TimerContext';
 
 interface ProgressRingProps {
-  progress: number; // 0-100 arası
   size: number;
   strokeWidth: number;
   color: string;
@@ -11,50 +11,91 @@ interface ProgressRingProps {
 }
 
 const ProgressRing: React.FC<ProgressRingProps> = ({
-  progress,
   size,
   strokeWidth,
   color,
   children
 }) => {
-  // SVG halka için hesaplamalar
+  const { timerState, totalDuration, timeRemaining } = useTimer();
+  const [dashOffset, setDashOffset] = useState(0);
+  const startTimeRef = useRef<number | null>(null);
+  const animFrameRef = useRef<number | null>(null);
+  const initialRemainingRef = useRef<number>(0);
+  
+  // SVG hesaplamaları
   const radius = (size - strokeWidth) / 2;
   const circumference = radius * 2 * Math.PI;
   
-  // Animasyon değeri
-  const animatedValue = useRef(new Animated.Value(0)).current;
-  
-  // Animated çemberi oluştur
-  const AnimatedCircle = Animated.createAnimatedComponent(Circle);
-  
-  // Progress interpolasyonu
-  const strokeDashoffset = animatedValue.interpolate({
-    inputRange: [0, 100],
-    outputRange: [circumference, 0],
-    extrapolate: 'clamp'
-  });
-
-  // Progress değiştiğinde animasyon
+  // Zamanlayıcıyı başlatma, durdurma ve sıfırlama
   useEffect(() => {
-    // Progress 0 ise hızlı animasyon, değilse normal hızda
-    const duration = progress === 0 ? 100 : 300;
+    // Animasyon durdurma fonksiyonu
+    const stopAnimation = () => {
+      if (animFrameRef.current !== null) {
+        cancelAnimationFrame(animFrameRef.current);
+        animFrameRef.current = null;
+      }
+      startTimeRef.current = null;
+    };
     
-    // Daha pürüzsüz animasyon için timing kullan
-    Animated.timing(animatedValue, {
-      toValue: progress,
-      duration: duration,
-      useNativeDriver: true,
-    }).start();
-  }, [progress, animatedValue]);
+    // Timer durumuna göre işlem yap
+    if (timerState === TimerState.READY) {
+      // Timer hazır durumunda - ilerlemeyi sıfırla
+      stopAnimation();
+      setDashOffset(circumference);
+    } 
+    else if (timerState === TimerState.RUNNING) {
+      // Timer çalışıyor - animasyonu başlat
+      if (!startTimeRef.current) {
+        startTimeRef.current = Date.now();
+        initialRemainingRef.current = timeRemaining;
+        
+        // Animasyon fonksiyonu
+        const updateProgress = () => {
+          if (!startTimeRef.current) return;
+          
+          const elapsedSecs = (Date.now() - startTimeRef.current) / 1000;
+          const initialProgress = (totalDuration - initialRemainingRef.current) / totalDuration;
+          const additionalProgress = elapsedSecs / totalDuration;
+          
+          // Toplam ilerleme (başlangıç + geçen süre)
+          let totalProgress = initialProgress + additionalProgress;
+          totalProgress = Math.min(1, Math.max(0, totalProgress));
+          
+          // StrokeDashoffset hesapla
+          const newOffset = circumference * (1 - totalProgress);
+          setDashOffset(newOffset);
+          
+          // Animasyonu sürdür
+          animFrameRef.current = requestAnimationFrame(updateProgress);
+        };
+        
+        // Animasyonu başlat
+        animFrameRef.current = requestAnimationFrame(updateProgress);
+      }
+    } 
+    else if (timerState === TimerState.PAUSED) {
+      // Timer durduruldu - animasyonu durdur
+      stopAnimation();
+      // Mevcut ilerlemeyi hesapla ve ayarla
+      const progress = (totalDuration - timeRemaining) / totalDuration;
+      setDashOffset(circumference * (1 - progress));
+    }
+    else if (timerState === TimerState.COMPLETED) {
+      // Timer tamamlandı - ilerlemeyi 100% yap
+      stopAnimation();
+      setDashOffset(0);
+    }
+    
+    // Temizleme işlemi
+    return () => {
+      stopAnimation();
+    };
+  }, [timerState, timeRemaining, totalDuration, circumference]);
 
   return (
-    <View style={[
-      styles.container, 
-      { width: size, height: size },
-      styles.shadowContainer
-    ]}>
+    <View style={[styles.container, { width: size, height: size }]}>
       <Svg width={size} height={size}>
-        {/* Arkaplan halkası */}
+        {/* Arka plan halkası */}
         <Circle
           stroke="#f0f0f0"
           fill="none"
@@ -64,8 +105,8 @@ const ProgressRing: React.FC<ProgressRingProps> = ({
           strokeWidth={strokeWidth}
         />
         
-        {/* Animasyonlu ilerleme halkası */}
-        <AnimatedCircle
+        {/* İlerleme halkası */}
+        <Circle
           stroke={color}
           fill="none"
           cx={size / 2}
@@ -73,13 +114,12 @@ const ProgressRing: React.FC<ProgressRingProps> = ({
           r={radius}
           strokeWidth={strokeWidth}
           strokeDasharray={circumference}
-          strokeDashoffset={strokeDashoffset}
+          strokeDashoffset={dashOffset}
           strokeLinecap="round"
           transform={`rotate(-90, ${size / 2}, ${size / 2})`}
         />
       </Svg>
       
-      {/* İçerik (zamanlayıcı) */}
       <View style={styles.content}>
         {children}
       </View>
@@ -92,6 +132,12 @@ const styles = StyleSheet.create({
     position: 'relative',
     alignItems: 'center',
     justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 8,
+    backgroundColor: 'transparent',
   },
   content: {
     position: 'absolute',
@@ -101,14 +147,6 @@ const styles = StyleSheet.create({
     bottom: 0,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  shadowContainer: {
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
-    elevation: 8,
-    backgroundColor: 'transparent',
   }
 });
 

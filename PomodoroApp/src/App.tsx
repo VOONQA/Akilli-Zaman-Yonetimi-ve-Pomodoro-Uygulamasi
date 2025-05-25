@@ -7,9 +7,8 @@ import { checkApiKey } from './services/chatbot/checkEnv';
 import { initDatabase } from './services/database';
 import { initializeBadgesInDB, ensureDefaultUserProfile } from './services/BadgeService';
 import * as Notifications from 'expo-notifications';
-import { useTask } from './context/TaskContext';
 import { migrateDatabase } from './services/migrations';
-///
+
 // Geçici olarak burada tanımlıyoruz, aslında services/database.ts'de olacak
 const initializeTables = async (db: any) => {
   console.log('Tablolar başlatılıyor...');
@@ -69,6 +68,7 @@ const MainApp: React.FC = () => {
     return <LoadingScreen />;
   }
 
+  // Doğrudan ana navigatörü döndür
   return <AppNavigator />;
 };
 

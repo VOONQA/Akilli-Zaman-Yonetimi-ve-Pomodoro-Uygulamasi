@@ -26,6 +26,12 @@ export type RootStackParamList = {
   TimerSettingsScreen: undefined;
   NotificationsSettingsScreen: undefined;
   CalendarEventImport: { calendarEvents: any[] };
+  // Auth ekranları
+  Login: undefined;
+  Register: undefined;
+  ForgotPassword: undefined;
+  AccountSettings: undefined;
+  EmailVerification: { email: string };
 };
 
 // Tab navigator prop tipleri

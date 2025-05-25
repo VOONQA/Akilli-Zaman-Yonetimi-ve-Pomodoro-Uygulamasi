@@ -8,7 +8,9 @@ import {
   ScrollView,
   StatusBar,
   Modal,
-  FlatList
+  FlatList,
+  KeyboardAvoidingView,
+  Platform
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { CreateTaskDTO, Task } from '../../models/Task';
@@ -140,74 +142,108 @@ const AddTaskForm: React.FC<AddTaskFormProps> = ({
   );
   
   return (
-    <View style={styles.container}>
-      {/* Turuncu başlık - resimde göründüğü gibi */}
-      <View style={styles.orangeHeader}>
-        <TouchableOpacity onPress={onCancel} style={styles.backButton}>
+    <KeyboardAvoidingView 
+      style={styles.container}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+    >
+      <StatusBar barStyle="light-content" backgroundColor="#5E60CE" />
+      
+      {/* Başlık çubuğu - mor renkte */}
+      <View style={styles.header}>
+        <TouchableOpacity onPress={onCancel} style={styles.headerButton}>
           <Ionicons name="arrow-back" size={24} color="#fff" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Yeni Görev</Text>
-        <TouchableOpacity onPress={handleSubmit}>
-          <Text style={styles.saveText}>Kaydet</Text>
+        <Text style={styles.headerTitle}>
+          {initialTask ? 'Görevi Düzenle' : 'Yeni Görev'}
+        </Text>
+        <TouchableOpacity onPress={handleSubmit} style={styles.headerButton}>
+          <Ionicons name="checkmark" size={28} color="#fff" />
         </TouchableOpacity>
       </View>
       
-      <ScrollView style={styles.scrollContainer}>
+      <ScrollView 
+        style={styles.scrollContainer}
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+      >
         <View style={styles.form}>
-          <Text style={styles.label}>Başlık</Text>
-          <TextInput
-            style={[styles.input, titleError ? styles.inputError : null]}
-            value={title}
-            onChangeText={setTitle}
-            placeholder="Görev başlığı"
-          />
-          {titleError ? <Text style={styles.errorText}>{titleError}</Text> : null}
+          {/* Başlık alanı */}
+          <View style={styles.inputContainer}>
+            <Text style={styles.label}>Başlık</Text>
+            <TextInput
+              style={[styles.input, titleError ? styles.inputError : null]}
+              value={title}
+              onChangeText={setTitle}
+              placeholder="Görev başlığı"
+              placeholderTextColor="#aaa"
+            />
+            {titleError ? <Text style={styles.errorText}>{titleError}</Text> : null}
+          </View>
           
-          <Text style={styles.label}>Açıklama</Text>
-          <TextInput
-            style={[styles.input, styles.textArea]}
-            value={description}
-            onChangeText={setDescription}
-            placeholder="Görev açıklaması (isteğe bağlı)"
-            multiline
-            numberOfLines={4}
-          />
+          {/* Açıklama alanı */}
+          <View style={styles.inputContainer}>
+            <Text style={styles.label}>Açıklama</Text>
+            <TextInput
+              style={[styles.input, styles.textArea]}
+              value={description}
+              onChangeText={setDescription}
+              placeholder="Görev açıklaması (isteğe bağlı)"
+              placeholderTextColor="#aaa"
+              multiline
+              numberOfLines={4}
+              textAlignVertical="top"
+            />
+          </View>
           
-          <Text style={styles.label}>Tarih</Text>
-          <TouchableOpacity
-            style={styles.datePickerButton}
-            onPress={openCalendar}
-          >
-            <Text>{date.toLocaleDateString('tr-TR')}</Text>
-            <Ionicons name="calendar-outline" size={20} color="#666" />
-          </TouchableOpacity>
-          
-          <Text style={styles.label}>Pomodoro Sayısı</Text>
-          <View style={styles.pomodoroContainer}>
+          {/* Tarih seçici */}
+          <View style={styles.inputContainer}>
+            <Text style={styles.label}>Tarih</Text>
             <TouchableOpacity
-              style={styles.pomodoroButton}
-              onPress={decrementPomodoro}
+              style={styles.datePickerButton}
+              onPress={openCalendar}
             >
-              <Ionicons name="remove" size={24} color="#666" />
+              <Text style={styles.dateText}>
+                {date.toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' })}
+              </Text>
+              <Ionicons name="calendar-outline" size={20} color="#5E60CE" />
             </TouchableOpacity>
-            
-            <View style={styles.pomodoroCountContainer}>
-              <Text style={styles.pomodoroCount}>{pomodoroCount}</Text>
+          </View>
+          
+          {/* Pomodoro sayacı */}
+          <View style={styles.inputContainer}>
+            <Text style={styles.label}>Pomodoro Sayısı</Text>
+            <View style={styles.pomodoroContainer}>
+              <TouchableOpacity
+                style={[styles.pomodoroButton, pomodoroCount <= 1 && styles.disabledButton]}
+                onPress={decrementPomodoro}
+                disabled={pomodoroCount <= 1}
+              >
+                <Ionicons 
+                  name="remove" 
+                  size={24} 
+                  color={pomodoroCount <= 1 ? "#ccc" : "#5E60CE"} 
+                />
+              </TouchableOpacity>
+              
+              <View style={styles.pomodoroCountContainer}>
+                <Text style={styles.pomodoroCount}>{pomodoroCount}</Text>
+              </View>
+              
+              <TouchableOpacity
+                style={styles.pomodoroButton}
+                onPress={incrementPomodoro}
+              >
+                <Ionicons name="add" size={24} color="#5E60CE" />
+              </TouchableOpacity>
             </View>
-            
-            <TouchableOpacity
-              style={styles.pomodoroButton}
-              onPress={incrementPomodoro}
-            >
-              <Ionicons name="add" size={24} color="#666" />
-            </TouchableOpacity>
           </View>
         </View>
       </ScrollView>
       
+      {/* Takvim Modalı - Düzeltildi */}
       <Modal
         visible={showCalendar}
-        animationType="slide"
+        animationType="fade"
         transparent={true}
         onRequestClose={() => setShowCalendar(false)}
       >
@@ -220,215 +256,198 @@ const AddTaskForm: React.FC<AddTaskFormProps> = ({
               </TouchableOpacity>
             </View>
             
-            <View style={styles.calendarContentContainer}>
+            <ScrollView style={styles.calendarContent}>
+              {/* Takvim bileşeni */}
               <TaskCalendar 
                 onDateSelect={handleCalendarDateSelect}
                 hideTaskModal={true}
               />
-              
-              {selectedCalendarDate && (
-                <View style={styles.selectedDateContainer}>
-                  <Text style={styles.selectedDateTitle}>
-                    {selectedCalendarDate.toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' })}
-                  </Text>
-                  
-                  <View style={styles.taskListContainer}>
-                    {selectedDateTasks.length > 0 ? (
-                      <FlatList
-                        data={selectedDateTasks}
-                        renderItem={renderTaskItem}
-                        keyExtractor={item => item.id}
-                        style={styles.tasksList}
-                      />
-                    ) : (
-                      <Text style={styles.noTasksText}>Bu günde görev yok</Text>
-                    )}
-                  </View>
-                  
-                  <TouchableOpacity 
-                    style={styles.confirmButton}
-                    onPress={confirmDateSelection}
-                  >
-                    <Text style={styles.confirmButtonText}>Tamam</Text>
-                  </TouchableOpacity>
-                </View>
-              )}
-            </View>
+            </ScrollView>
+            
+            <TouchableOpacity 
+              style={styles.confirmDateButton}
+              onPress={confirmDateSelection}
+            >
+              <Text style={styles.confirmDateButtonText}>Onayla</Text>
+            </TouchableOpacity>
           </View>
         </View>
       </Modal>
-    </View>
+    </KeyboardAvoidingView>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: '#f5f7fa',
+  },
+  header: {
+    backgroundColor: '#5E60CE',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingTop: 40,
+    paddingBottom: 15,
+    paddingHorizontal: 16,
+    elevation: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 3,
+  },
+  headerButton: {
+    padding: 8,
+  },
+  headerTitle: {
+    color: '#fff',
+    fontSize: 18,
+    fontWeight: 'bold',
   },
   scrollContainer: {
     flex: 1,
   },
-  orangeHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: 16,
-    backgroundColor: '#FF5722', // Turuncu renk
-    paddingTop: StatusBar.currentHeight ? StatusBar.currentHeight + 16 : 36, // Status bar için ek padding
-  },
-  backButton: {
-    width: 40,
-  },
-  headerTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#fff',
-  },
-  saveText: {
-    color: '#fff',
-    fontWeight: '500',
-    fontSize: 16,
-  },
   form: {
     padding: 16,
   },
+  inputContainer: {
+    marginBottom: 20,
+  },
   label: {
-    fontSize: 16,
-    fontWeight: '500',
-    marginBottom: 6,
-    color: '#333',
+    fontSize: 14,
+    fontWeight: '600',
+    marginBottom: 8,
+    color: '#555',
+    letterSpacing: 0.3,
   },
   input: {
     borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 8,
+    borderColor: '#e1e5eb',
+    borderRadius: 10,
     padding: 12,
-    marginBottom: 16,
     fontSize: 16,
-    backgroundColor: '#f9f9f9',
+    backgroundColor: '#fff',
+    color: '#333',
   },
   inputError: {
-    borderColor: '#f44336',
-  },
-  errorText: {
-    color: '#f44336',
-    marginTop: -12,
-    marginBottom: 16,
+    borderColor: '#e74c3c',
   },
   textArea: {
-    height: 100,
-    textAlignVertical: 'top',
+    minHeight: 100,
+    lineHeight: 22,
+  },
+  errorText: {
+    color: '#e74c3c',
+    fontSize: 12,
+    marginTop: 4,
   },
   datePickerButton: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 8,
+    borderColor: '#e1e5eb',
+    borderRadius: 10,
     padding: 12,
-    marginBottom: 16,
-    backgroundColor: '#f9f9f9',
+    backgroundColor: '#fff',
+  },
+  dateText: {
+    fontSize: 16,
+    color: '#333',
   },
   pomodoroContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 24,
+    paddingVertical: 10,
   },
   pomodoroButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: '#f0f0f0',
+    width: 45,
+    height: 45,
+    borderRadius: 22.5,
+    backgroundColor: '#fff',
     justifyContent: 'center',
     alignItems: 'center',
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 1,
+  },
+  disabledButton: {
+    backgroundColor: '#f5f5f5',
+    elevation: 0,
+    shadowOpacity: 0,
   },
   pomodoroCountContainer: {
-    width: 60,
+    width: 80,
     alignItems: 'center',
   },
   pomodoroCount: {
-    fontSize: 20,
+    fontSize: 24,
     fontWeight: 'bold',
     color: '#333',
   },
   modalOverlay: {
-    flex: 1, 
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    justifyContent: 'flex-end',
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   calendarContainer: {
     backgroundColor: '#fff',
-    borderTopLeftRadius: 16,
-    borderTopRightRadius: 16,
-    height: '95%',
+    borderRadius: 12,
+    width: '90%',
+    maxHeight: '80%',
+    overflow: 'hidden',
   },
   calendarHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    padding: 16,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
+    borderBottomColor: '#eee',
   },
   calendarTitle: {
     fontSize: 18,
     fontWeight: 'bold',
     color: '#333',
   },
-  calendarContentContainer: {
-    flex: 1,
-    flexDirection: 'column',
+  calendarContent: {
+    padding: 10,
   },
-  selectedDateContainer: {
+  confirmDateButton: {
+    backgroundColor: '#5E60CE',
     padding: 16,
-    backgroundColor: '#f9f9f9',
-    borderTopWidth: 1,
-    borderTopColor: '#eee',
+    alignItems: 'center',
   },
-  selectedDateTitle: {
-    fontSize: 16,
+  confirmDateButtonText: {
+    color: '#fff',
     fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 8,
-  },
-  taskListContainer: {
-    maxHeight: 150,
-    marginBottom: 16,
-  },
-  tasksList: {
-    backgroundColor: '#fff',
-    borderRadius: 8,
-  },
-  noTasksText: {
-    padding: 16,
-    color: '#999',
-    textAlign: 'center',
-    backgroundColor: '#fff',
-    borderRadius: 8,
+    fontSize: 16,
   },
   taskItem: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
-    backgroundColor: '#fff',
-    borderRadius: 8,
+    justifyContent: 'space-between',
     padding: 12,
+    backgroundColor: '#f9f9f9',
+    borderRadius: 8,
     marginBottom: 8,
   },
   completedTaskItem: {
-    opacity: 0.7,
+    backgroundColor: '#f0f0f0',
   },
   taskInfo: {
     flex: 1,
-    marginRight: 8,
+    marginRight: 10,
   },
   taskTitle: {
     fontSize: 14,
-    fontWeight: '500',
-    marginBottom: 2,
+    color: '#333',
+    marginBottom: 4,
   },
   completedTaskTitle: {
     textDecorationLine: 'line-through',
@@ -441,17 +460,6 @@ const styles = StyleSheet.create({
   taskProgressText: {
     fontSize: 12,
     color: '#666',
-  },
-  confirmButton: {
-    backgroundColor: '#FF5722',
-    borderRadius: 8,
-    padding: 12,
-    alignItems: 'center',
-  },
-  confirmButtonText: {
-    color: '#fff',
-    fontWeight: 'bold',
-    fontSize: 16,
   },
 });
 

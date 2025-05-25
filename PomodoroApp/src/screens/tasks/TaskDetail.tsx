@@ -6,7 +6,8 @@ import {
   TouchableOpacity, 
   ScrollView,
   ActivityIndicator,
-  Alert
+  Alert,
+  StatusBar
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { RootScreenProps } from '../../navigation/navigationTypes';
@@ -94,7 +95,7 @@ const TaskDetailScreen: React.FC<Props> = ({ route, navigation }) => {
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#FF5722" />
+        <ActivityIndicator size="large" color="#5E60CE" />
       </View>
     );
   }
@@ -108,214 +109,259 @@ const TaskDetailScreen: React.FC<Props> = ({ route, navigation }) => {
   }
   
   return (
-    <ScrollView style={styles.container}>
-      <View style={styles.header}>
-        <View style={styles.titleContainer}>
-          <Text style={[
-            styles.title,
-            task.isCompleted && styles.completedTitle
-          ]}>
-            {task.title}
-          </Text>
-          
-          <TouchableOpacity
-            style={styles.completionButton}
-            onPress={handleToggleCompletion}
-          >
-            {task.isCompleted ? (
-              <Ionicons name="checkmark-circle" size={28} color="#4CAF50" />
-            ) : (
-              <Ionicons name="ellipse-outline" size={28} color="#666" />
-            )}
-          </TouchableOpacity>
-        </View>
-        
-        <View style={styles.dateContainer}>
-          <View style={styles.dateItem}>
-            <Ionicons name="calendar-outline" size={16} color="#666" />
-            <Text style={styles.dateText}>
-              {new Date(task.date).toLocaleDateString('tr-TR')}
+    <View style={styles.container}>
+      <StatusBar barStyle="light-content" backgroundColor="#5E60CE" />
+      
+      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+        <View style={styles.card}>
+          <View style={styles.titleContainer}>
+            <Text style={[
+              styles.title,
+              task.isCompleted && styles.completedTitle
+            ]}>
+              {task.title}
             </Text>
+            
+            <TouchableOpacity
+              style={styles.completionButton}
+              onPress={handleToggleCompletion}
+            >
+              {task.isCompleted ? (
+                <Ionicons name="checkmark-circle" size={28} color="#4CAF50" />
+              ) : (
+                <Ionicons name="ellipse-outline" size={28} color="#5E60CE" />
+              )}
+            </TouchableOpacity>
           </View>
           
-          {task.dueDate && (
-            <View style={styles.dateItem}>
-              <Ionicons name="flag-outline" size={16} color="#666" />
-              <Text style={styles.dateText}>
-                Son Tarih: {new Date(task.dueDate).toLocaleDateString('tr-TR')}
+          <View style={styles.infoRow}>
+            <View style={styles.infoItem}>
+              <Ionicons name="calendar-outline" size={18} color="#5E60CE" />
+              <Text style={styles.infoText}>
+                {new Date(task.date).toLocaleDateString('tr-TR')}
               </Text>
+            </View>
+            
+            {task.dueDate && (
+              <View style={styles.infoItem}>
+                <Ionicons name="flag-outline" size={18} color="#5E60CE" />
+                <Text style={styles.infoText}>
+                  {new Date(task.dueDate).toLocaleDateString('tr-TR')}
+                </Text>
+              </View>
+            )}
+          </View>
+          
+          <View style={styles.progressSection}>
+            <View style={styles.progressHeader}>
+              <Text style={styles.progressTitle}>Pomodoro İlerleme</Text>
+              <Text style={styles.progressCount}>
+                {task.completedPomodoros}/{task.pomodoroCount}
+              </Text>
+            </View>
+            
+            <View style={styles.progressBar}>
+              <View 
+                style={[
+                  styles.progressFill, 
+                  { 
+                    width: `${Math.min(100, (task.completedPomodoros / task.pomodoroCount) * 100)}%`,
+                    backgroundColor: task.isCompleted ? '#4CAF50' : '#5E60CE' 
+                  }
+                ]} 
+              />
+            </View>
+          </View>
+          
+          {task.description && (
+            <View style={styles.descriptionSection}>
+              <Text style={styles.sectionTitle}>Açıklama</Text>
+              <Text style={styles.description}>{task.description}</Text>
             </View>
           )}
         </View>
-      </View>
+      </ScrollView>
       
-      {task.description && (
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Açıklama</Text>
-          <Text style={styles.description}>{task.description}</Text>
-        </View>
-      )}
-      
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Pomodoro İlerleme</Text>
-        <View style={styles.progressContainer}>
-          <View style={styles.progressBar}>
-            <View 
-              style={[
-                styles.progressFill, 
-                { 
-                  width: `${Math.min(100, (task.completedPomodoros / task.pomodoroCount) * 100)}%`,
-                  backgroundColor: task.isCompleted ? '#4CAF50' : '#FF5722' 
-                }
-              ]} 
-            />
-          </View>
-          <Text style={styles.progressText}>
-            {task.completedPomodoros}/{task.pomodoroCount} Pomodoro
-          </Text>
-        </View>
-      </View>
-      
-      <View style={styles.buttonsContainer}>
+      <View style={styles.actionBar}>
         <TouchableOpacity
-          style={[styles.button, styles.timerButton]}
+          style={[styles.actionButton, styles.timerButton]}
           onPress={handleStartTimer}
         >
-          <Ionicons name="timer-outline" size={20} color="#fff" />
-          <Text style={styles.buttonText}>Pomodoro Başlat</Text>
+          <Ionicons name="play-circle" size={24} color="#fff" />
+          <Text style={styles.actionButtonText}>Başlat</Text>
         </TouchableOpacity>
         
         <TouchableOpacity
-          style={[styles.button, styles.editButton]}
+          style={[styles.actionButton, styles.editButton]}
           onPress={() => navigation.navigate('EditTask', { taskId: task.id })}
         >
-          <Ionicons name="create-outline" size={20} color="#fff" />
-          <Text style={styles.buttonText}>Düzenle</Text>
+          <Ionicons name="create" size={24} color="#fff" />
+          <Text style={styles.actionButtonText}>Düzenle</Text>
         </TouchableOpacity>
         
         <TouchableOpacity
-          style={[styles.button, styles.deleteButton]}
+          style={[styles.actionButton, styles.deleteButton]}
           onPress={handleDelete}
         >
-          <Ionicons name="trash-outline" size={20} color="#fff" />
-          <Text style={styles.buttonText}>Sil</Text>
+          <Ionicons name="trash" size={24} color="#fff" />
+          <Text style={styles.actionButtonText}>Sil</Text>
         </TouchableOpacity>
       </View>
-    </ScrollView>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: '#f5f7fa',
+    paddingTop: 10,
   },
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    backgroundColor: '#f5f7fa',
   },
   errorContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    backgroundColor: '#f5f7fa',
   },
-  header: {
+  content: {
+    flex: 1,
+    padding: 16,
+  },
+  card: {
+    backgroundColor: '#fff',
+    borderRadius: 12,
     padding: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
+    marginBottom: 16,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
   },
   titleContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 10,
+    marginBottom: 16,
   },
   title: {
     fontSize: 24,
     fontWeight: 'bold',
+    color: '#333',
     flex: 1,
   },
   completedTitle: {
     textDecorationLine: 'line-through',
-    color: '#999',
+    color: '#aaa',
   },
   completionButton: {
-    padding: 5,
+    padding: 6,
   },
-  dateContainer: {
-    marginTop: 8,
+  infoRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    marginBottom: 20,
   },
-  dateItem: {
+  infoItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 4,
+    marginRight: 16,
+    marginBottom: 6,
+    backgroundColor: '#f0f2f5',
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 20,
   },
-  dateText: {
+  infoText: {
     marginLeft: 6,
     color: '#666',
     fontSize: 14,
   },
-  section: {
-    padding: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
+  progressSection: {
+    marginBottom: 20,
+  },
+  progressHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  progressTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#333',
+  },
+  progressCount: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#5E60CE',
+  },
+  progressBar: {
+    height: 8,
+    backgroundColor: '#f0f2f5',
+    borderRadius: 4,
+    overflow: 'hidden',
+  },
+  progressFill: {
+    height: '100%',
+    backgroundColor: '#5E60CE',
+    borderRadius: 4,
+  },
+  descriptionSection: {
+    marginTop: 10,
   },
   sectionTitle: {
     fontSize: 16,
     fontWeight: 'bold',
-    marginBottom: 10,
     color: '#333',
+    marginBottom: 10,
   },
   description: {
     lineHeight: 22,
-    color: '#444',
+    color: '#555',
+    fontSize: 15,
   },
-  progressContainer: {
-    marginTop: 10,
+  actionBar: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    padding: 16,
+    backgroundColor: '#fff',
+    borderTopWidth: 1,
+    borderTopColor: '#eee',
   },
-  progressBar: {
-    height: 10,
-    backgroundColor: '#f0f0f0',
-    borderRadius: 5,
-    overflow: 'hidden',
-    marginBottom: 8,
-  },
-  progressFill: {
-    height: '100%',
-    backgroundColor: '#FF5722',
-    borderRadius: 5,
-  },
-  progressText: {
-    fontSize: 14,
-    color: '#666',
-    textAlign: 'right',
-  },
-  buttonsContainer: {
-    padding: 20,
-    flexDirection: 'column',
-    gap: 10,
-  },
-  button: {
-    borderRadius: 8,
-    padding: 14,
+  actionButton: {
+    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
+    borderRadius: 8,
+    paddingVertical: 12,
+    marginHorizontal: 6,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.2,
+    shadowRadius: 2,
   },
-  buttonText: {
+  actionButtonText: {
     color: '#fff',
-    fontWeight: '500',
-    marginLeft: 8,
+    fontWeight: 'bold',
+    marginLeft: 6,
   },
   timerButton: {
-    backgroundColor: '#FF5722',
+    backgroundColor: '#5E60CE',
   },
   editButton: {
-    backgroundColor: '#2196F3',
+    backgroundColor: '#3498db',
   },
   deleteButton: {
-    backgroundColor: '#f44336',
+    backgroundColor: '#e74c3c',
   },
 });
 

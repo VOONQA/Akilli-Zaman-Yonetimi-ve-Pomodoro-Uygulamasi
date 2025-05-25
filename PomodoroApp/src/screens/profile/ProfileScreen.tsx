@@ -12,6 +12,12 @@ import { useStatistics } from '../../context/StatisticsContext';
 import { format } from 'date-fns';
 import { tr } from 'date-fns/locale';
 import BadgeDetailScreen from './BadgeDetailScreen';
+import { useNavigation, NavigationProp } from '@react-navigation/native';
+
+// Navigasyon tiplerini tanımlayalım
+type RootStackParamList = {
+  Main: undefined;
+};
 
 interface ProfileScreenProps {
   onClose: () => void;
@@ -45,6 +51,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ onClose }) => {
   } = useBadge();
   const { db } = useDatabase();
   const { getMostProductiveTimePeriod } = useStatistics();
+  const navigation = useNavigation<NavigationProp<RootStackParamList>>();
   const [userStats, setUserStats] = useState<UserStats>(MOCK_USER_STATS);
   const [lockedBadges, setLockedBadges] = useState<any[]>([]);
   const [showLockedBadges, setShowLockedBadges] = useState(false);
@@ -222,6 +229,11 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ onClose }) => {
   const closeBadgeDetail = () => {
     setBadgeDetailVisible(false);
     setSelectedBadge(null);
+  };
+
+  const handleLoginPress = () => {
+    // Bu fonksiyon artık boş olabilir çünkü LoginButton kendi navigation'ını hallediyor
+    onClose();
   };
 
   return (

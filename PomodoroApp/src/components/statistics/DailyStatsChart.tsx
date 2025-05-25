@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ActivityIndicator, Dimensions } from 'react-native';
 import { LineChart } from 'react-native-chart-kit';
 import { format } from 'date-fns';
-import { tr } from 'date-fns/locale';
+import { tr } from 'date-fns/locale/tr';
 import { useStatistics } from '../../context/StatisticsContext';
 import { DailyStats } from '../../types/statistics';
 

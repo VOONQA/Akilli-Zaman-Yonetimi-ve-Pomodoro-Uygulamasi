@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, FlatList, Animated, StyleSheet, Modal, Platform } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView, FlatList, Animated, StyleSheet, Modal, Platform, PanResponder } from 'react-native';
 import { Button } from 'react-native-paper';
 import { Ionicons, FontAwesome } from '@expo/vector-icons';
 import * as Notifications from 'expo-notifications';
@@ -15,6 +15,8 @@ import { useYouTube } from '../../context/YouTubeContext';
 import { YouTubeModal } from '../../components/youtube';
 import NoteModal from '../../components/notes/NoteModal';
 import { useSettings } from '../../context/SettingsContext';
+import { TAB_BAR_HEIGHT } from '../../navigation/TabNavigator';
+import { useNavigation } from '@react-navigation/native';
 
 // Bildirimlerin uygulamada nasıl gösterileceğini ayarla
 Notifications.setNotificationHandler({
@@ -72,7 +74,7 @@ const localStyles = StyleSheet.create({
     shadowRadius: 2,
   },
   activeTypeButton: {
-    backgroundColor: '#FF5722',
+    backgroundColor: '#5E60CE',
     elevation: 4,
   },
   typeButtonText: {
@@ -134,13 +136,13 @@ const TimerScreen: React.FC<Props> = ({ navigation }) => {
   const getTimerColor = () => {
     switch (timerType) {
       case TimerType.POMODORO:
-        return '#FF5722';
+        return '#5E60CE';
       case TimerType.SHORT_BREAK:
         return '#4CAF50';
       case TimerType.LONG_BREAK:
         return '#2196F3';
       default:
-        return '#FF5722';
+        return '#5E60CE';
     }
   };
 
@@ -370,42 +372,50 @@ const TimerScreen: React.FC<Props> = ({ navigation }) => {
   };
   
   // Timer tamamlandığında bildirimleri göster
+  const [lastNotificationTime, setLastNotificationTime] = useState(0);
+
   useEffect(() => {
     if (timerState === TimerState.COMPLETED) {
-      // Timer tipine göre bildirim göster
-      if (timerType === TimerType.POMODORO) {
-        sendNotification(
-          'Pomodoro Tamamlandı!',
-          'Tebrikler! Şimdi bir mola verme zamanı geldi.'
-        );
-      } else if (timerType === TimerType.SHORT_BREAK) {
-        sendNotification(
-          'Kısa Mola Tamamlandı!',
-          'Çalışmaya devam etmek için hazır mısın?'
-        );
-      } else if (timerType === TimerType.LONG_BREAK) {
-        sendNotification(
-          'Uzun Mola Tamamlandı!',
-          'Dinlendin mi? Yeni bir pomodoro setine başlamaya hazırsın!'
-        );
-      }
-      
-      // Otomatik başlama durumunu kontrol et
-      const willAutoStart = 
-        (timerType === TimerType.POMODORO && settings.timer.autoStartBreaks) ||
-        ((timerType === TimerType.SHORT_BREAK || timerType === TimerType.LONG_BREAK) && 
-          settings.timer.autoStartPomodoros);
-      
-      if (willAutoStart) {
-        // Otomatik başlama bildirimi
-        const nextMode = timerType === TimerType.POMODORO ? 'mola' : 'pomodoro';
-        sendNotification(
-          'Otomatik Başlatma', 
-          `${nextMode.charAt(0).toUpperCase() + nextMode.slice(1)} otomatik olarak başlatılacak.`
-        );
+      // Son bildirim zamanından bu yana en az 2 saniye geçmişse bildirim gönder
+      const now = Date.now();
+      if (now - lastNotificationTime > 2000) {
+        setLastNotificationTime(now);
+        
+        // Timer tipine göre bildirim göster
+        if (timerType === TimerType.POMODORO) {
+          sendNotification(
+            'Pomodoro Tamamlandı!',
+            'Tebrikler! Şimdi bir mola verme zamanı geldi.'
+          );
+        } else if (timerType === TimerType.SHORT_BREAK) {
+          sendNotification(
+            'Kısa Mola Tamamlandı!',
+            'Çalışmaya devam etmek için hazır mısın?'
+          );
+        } else if (timerType === TimerType.LONG_BREAK) {
+          sendNotification(
+            'Uzun Mola Tamamlandı!',
+            'Dinlendin mi? Yeni bir pomodoro setine başlamaya hazırsın!'
+          );
+        }
+        
+        // Otomatik başlama durumunu kontrol et
+        const willAutoStart = 
+          (timerType === TimerType.POMODORO && settings.timer.autoStartBreaks) ||
+          ((timerType === TimerType.SHORT_BREAK || timerType === TimerType.LONG_BREAK) && 
+            settings.timer.autoStartPomodoros);
+        
+        if (willAutoStart) {
+          // Otomatik başlama bildirimi
+          const nextMode = timerType === TimerType.POMODORO ? 'mola' : 'pomodoro';
+          sendNotification(
+            'Otomatik Başlatma', 
+            `${nextMode.charAt(0).toUpperCase() + nextMode.slice(1)} otomatik olarak başlatılacak.`
+          );
+        }
       }
     }
-  }, [timerState, timerType, settings.timer.autoStartBreaks, settings.timer.autoStartPomodoros]);
+  }, [timerState, timerType, settings.timer.autoStartBreaks, settings.timer.autoStartPomodoros, lastNotificationTime]);
   
   // Bildirime tıklanırsa yapılacak işlemler
   useEffect(() => {
@@ -426,15 +436,34 @@ const TimerScreen: React.FC<Props> = ({ navigation }) => {
   // Uzun mola öncesi kalan pomodoro sayısını hesapla
   const remainingUntilLongBreak = settings.timer.pomodorosUntilLongBreak - (stats.completedPomodoros % settings.timer.pomodorosUntilLongBreak);
 
+  // Swipe gesture
+  const panResponder = PanResponder.create({
+    onMoveShouldSetPanResponder: (evt, gestureState) => {
+      return Math.abs(gestureState.dx) > Math.abs(gestureState.dy) && Math.abs(gestureState.dx) > 30;
+    },
+    onPanResponderRelease: (evt, gestureState) => {
+      if (gestureState.dx < -50) {
+        // Sola kaydır - Tasks'a git
+        navigation.navigate('Tasks');
+      }
+    },
+  });
+
   return (
-    <View style={baseStyles.container}>
-      <ScrollView style={baseStyles.scrollContainer} contentContainerStyle={baseStyles.scrollContentContainer}>
+    <View style={baseStyles.container} {...panResponder.panHandlers}>
+      <ScrollView 
+        style={baseStyles.scrollContainer} 
+        contentContainerStyle={[
+          baseStyles.scrollContentContainer,
+          { paddingBottom: TAB_BAR_HEIGHT + 20 } // Sadece scroll content'e padding ekle
+        ]}
+      >
         <View style={localStyles.headerContainer}>
           <TouchableOpacity 
             style={localStyles.noteButton}
             onPress={openNoteModal}
           >
-            <Ionicons name="document-text-outline" size={24} color="#FF5722" />
+            <Ionicons name="document-text-outline" size={24} color="#5E60CE" />
           </TouchableOpacity>
           <Text style={localStyles.headerTitle}>Pomodoro</Text>
           <TouchableOpacity
@@ -512,7 +541,7 @@ const TimerScreen: React.FC<Props> = ({ navigation }) => {
                   style={timerStyles.taskCloseButton}
                   onPress={clearCurrentTask}
                 >
-                  <Ionicons name="close" size={20} color="#FF5722" />
+                  <Ionicons name="close" size={20} color="#5E60CE" />
                 </TouchableOpacity>
                 <Ionicons name="chevron-forward" size={20} color="#666" style={{ marginLeft: 8 }} />
               </View>
@@ -522,7 +551,6 @@ const TimerScreen: React.FC<Props> = ({ navigation }) => {
 
         <View style={localStyles.timerContainerWrapper}>
           <ProgressRing
-            progress={progressPercentage}
             size={280}
             strokeWidth={15}
             color={getTimerColor()}
@@ -534,17 +562,6 @@ const TimerScreen: React.FC<Props> = ({ navigation }) => {
             />
           </ProgressRing>
         </View>
-        
-        {timerType === TimerType.POMODORO && (
-          <View style={localStyles.cycleInfoContainer}>
-            <Text style={localStyles.cycleInfoText}>
-              Bu oturumda {stats.completedPomodoros} pomodoro tamamladınız
-            </Text>
-            <Text style={localStyles.cycleInfoText}>
-              Uzun molaya {remainingUntilLongBreak} pomodoro kaldı
-            </Text>
-          </View>
-        )}
 
         <ControlPanel
           timerState={timerState}
@@ -568,7 +585,7 @@ const TimerScreen: React.FC<Props> = ({ navigation }) => {
           <View style={baseStyles.tasksPanelHeader}>
             <Text style={baseStyles.tasksPanelTitle}>Tamamlanan Görevler ({completedTasks.length})</Text>
             <TouchableOpacity onPress={() => navigation.navigate('Tasks', { initialFilter: 'completed' as const })}>
-              <Text style={baseStyles.seeAllButton}>Tümünü Gör</Text>
+              <Text style={[baseStyles.seeAllButton, { color: '#5E60CE' }]}>Tümünü Gör</Text>
             </TouchableOpacity>
           </View>
           

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Modal } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Modal, PanResponder } from 'react-native';
 import { TabScreenProps } from '../../navigation/navigationTypes';
 import { 
   DailyStatsChart, 
@@ -10,12 +10,14 @@ import {
 } from '../../components/statistics';
 import { addDays, subDays, addWeeks, subWeeks, addMonths, subMonths, isSameDay } from 'date-fns';
 import { Ionicons } from '@expo/vector-icons';
+import { useTabBarSpace } from '../../hooks/useTabBarSpace';
 
 type TimeFrameType = 'daily' | 'weekly' | 'monthly';
 
 type Props = TabScreenProps<'Statistics'>;
 
 const StatsScreen: React.FC<Props> = ({ navigation }) => {
+  const { containerStyle, TabBarSpacer } = useTabBarSpace();
   const [selectedTimeFrame, setSelectedTimeFrame] = useState<TimeFrameType>('daily');
   const [currentDate, setCurrentDate] = useState<Date>(new Date());
   const [infoModalVisible, setInfoModalVisible] = useState(false);
@@ -122,32 +124,59 @@ const StatsScreen: React.FC<Props> = ({ navigation }) => {
     }
   };
   
+  // Swipe gesture
+  const panResponder = PanResponder.create({
+    onMoveShouldSetPanResponder: (evt, gestureState) => {
+      return Math.abs(gestureState.dx) > Math.abs(gestureState.dy) && Math.abs(gestureState.dx) > 30;
+    },
+    onPanResponderRelease: (evt, gestureState) => {
+      if (gestureState.dx > 50) {
+        // Sağa kaydır - Tasks'a git
+        navigation.navigate('Tasks');
+      } else if (gestureState.dx < -50) {
+        // Sola kaydır - Settings'e git
+        navigation.navigate('Settings');
+      }
+    },
+  });
+
   return (
-    <ScrollView style={styles.container}>
-      <View style={styles.headerContainer}>
-        <Text style={styles.title}>İstatistikler</Text>
-        <TouchableOpacity onPress={() => setInfoModalVisible(true)} style={styles.infoButton}>
-          <Ionicons name="information-circle-outline" size={22} color="#5E60CE" />
-        </TouchableOpacity>
-      </View>
-      
-      {renderTimeControls()}
-      
-      {renderStatsByTimeFrame()}
-      
-      <TaskCompletionChart 
-        startDate={subDays(new Date(), 30)}
-        endDate={new Date()}
-        title="Son 30 Gün Görev Tamamlama"
-      />
-      
-      <ProductivityAnalysis
-        startDate={subDays(new Date(), 30)}
-        endDate={new Date()}
-        timeRange={selectedTimeFrame}
-        date={currentDate}
-      />
-      
+    <View style={styles.container}>
+      <ScrollView 
+        style={styles.scrollView}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+        bounces={true}
+        contentInsetAdjustmentBehavior="automatic"
+        scrollEventThrottle={16}
+      >
+        <View style={styles.headerContainer}>
+          <Text style={styles.title}>İstatistikler</Text>
+          <TouchableOpacity onPress={() => setInfoModalVisible(true)} style={styles.infoButton}>
+            <Ionicons name="information-circle-outline" size={22} color="#5E60CE" />
+          </TouchableOpacity>
+        </View>
+        
+        {renderTimeControls()}
+        
+        {renderStatsByTimeFrame()}
+        
+        <TaskCompletionChart 
+          startDate={subDays(new Date(), 30)}
+          endDate={new Date()}
+          title="Son 30 Gün Görev Tamamlama"
+        />
+        
+        <ProductivityAnalysis
+          startDate={subDays(new Date(), 30)}
+          endDate={new Date()}
+          timeRange={selectedTimeFrame}
+          date={currentDate}
+        />
+        
+        <TabBarSpacer />
+      </ScrollView>
+
       {/* Bilgi Modalı */}
       <Modal
         animationType="fade"
@@ -175,15 +204,21 @@ const StatsScreen: React.FC<Props> = ({ navigation }) => {
           </View>
         </TouchableOpacity>
       </Modal>
-    </ScrollView>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 16,
     backgroundColor: '#F8F8F8',
+  },
+  scrollView: {
+    flex: 1,
+  },
+  scrollContent: {
+    padding: 16,
+    paddingBottom: 20,
   },
   headerContainer: {
     flexDirection: 'row',

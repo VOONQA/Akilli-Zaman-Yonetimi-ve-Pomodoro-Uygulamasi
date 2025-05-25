@@ -1,6 +1,11 @@
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, Image, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import LoginButton from '../auth/LoginButton';
+import { useAuth } from '../../context/AuthContext';
+import { useNavigation } from '@react-navigation/native';
+import { ProfileImageService } from '../../services/ProfileImageService';
+import { styles } from './styles';
 
 interface ProfileHeaderProps {
   totalFocusTime: number;
@@ -13,17 +18,88 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({
   completionRate,
   totalBadges,
 }) => {
+  const { isAuthenticated, user, profileImage, updateProfileImage } = useAuth();
+  const navigation = useNavigation();
+
+  const handleProfileImagePress = async () => {
+    if (!isAuthenticated) {
+      Alert.alert('Giriş Gerekli', 'Profil resmi eklemek için giriş yapmanız gerekiyor');
+      return;
+    }
+
+    Alert.alert(
+      'Profil Resmi',
+      'Ne yapmak istiyorsunuz?',
+      [
+        { text: 'İptal', style: 'cancel' },
+        { text: 'Resim Seç', onPress: selectNewImage },
+        ...(profileImage ? [{ text: 'Resmi Sil', style: 'destructive' as const, onPress: removeImage }] : [])
+      ]
+    );
+  };
+
+  const selectNewImage = async () => {
+    try {
+      const imageUri = await ProfileImageService.selectProfileImage();
+      if (imageUri) {
+        await updateProfileImage(imageUri);
+        Alert.alert('Başarılı', 'Profil resminiz güncellendi');
+      }
+    } catch (error) {
+      Alert.alert('Hata', 'Profil resmi güncellenirken bir hata oluştu');
+    }
+  };
+
+  const removeImage = async () => {
+    try {
+      await updateProfileImage(null);
+      Alert.alert('Başarılı', 'Profil resminiz silindi');
+    } catch (error) {
+      Alert.alert('Hata', 'Profil resmi silinirken bir hata oluştu');
+    }
+  };
+
+  const handleLoginPress = () => {
+    if (isAuthenticated) {
+      navigation.navigate('AccountSettings' as never);
+    } else {
+      navigation.navigate('Login' as never);
+    }
+  };
+
   return (
     <View style={styles.container}>
-      <View style={styles.profileImageContainer}>
+      <TouchableOpacity 
+        style={styles.profileImageContainer}
+        onPress={handleProfileImagePress}
+        activeOpacity={0.7}
+      >
         <View style={styles.profileImage}>
-          <Ionicons name="person" size={40} color="#ffffff" />
+          {profileImage ? (
+            <Image 
+              source={{ uri: profileImage }} 
+              style={styles.profileImagePhoto}
+              resizeMode="cover"
+            />
+          ) : (
+            <Ionicons name="person" size={40} color="#ffffff" />
+          )}
+          
+          {/* Düzenleme ikonu */}
+          {isAuthenticated && (
+            <View style={styles.editIconContainer}>
+              <Ionicons name="camera" size={16} color="#ffffff" />
+            </View>
+          )}
         </View>
-      </View>
+      </TouchableOpacity>
       
-      <Text style={styles.userName}>Pomodoro Kullanıcısı</Text>
+      <Text style={styles.userName}>
+        {isAuthenticated && user?.displayName ? user.displayName : 'Pomodoro Kullanıcısı'}
+      </Text>
       
-      {/* Sadece rozet sayısını gösterelim */}
+      <LoginButton onPress={handleLoginPress} />
+      
       <View style={styles.badgeCountContainer}>
         <Ionicons name="ribbon" size={18} color="#4a6da7" />
         <Text style={styles.badgeCountText}>{totalBadges} Rozet Kazanıldı</Text>
@@ -31,54 +107,5 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({
     </View>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    backgroundColor: '#ffffff',
-    borderRadius: 12,
-    padding: 14,
-    marginHorizontal: 16,
-    marginTop: 16,
-    marginBottom: 10,
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 3,
-    elevation: 2,
-  },
-  profileImageContainer: {
-    marginBottom: 10,
-  },
-  profileImage: {
-    width: 70,
-    height: 70,
-    borderRadius: 35,
-    backgroundColor: '#4a6da7',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  userName: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 5,
-  },
-  badgeCountContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#f0f4fa',
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: 15,
-    marginTop: 5,
-  },
-  badgeCountText: {
-    fontSize: 12,
-    color: '#4a6da7',
-    fontWeight: '500',
-    marginLeft: 5,
-  },
-});
 
 export default ProfileHeader;

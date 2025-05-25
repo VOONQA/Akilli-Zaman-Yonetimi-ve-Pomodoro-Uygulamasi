@@ -22,7 +22,7 @@ export const styles = StyleSheet.create({
   addButton: {
     width: 40,
     height: 40,
-    backgroundColor: '#FF5722',
+    backgroundColor: '#5E60CE',
     borderRadius: 20,
     justifyContent: 'center',
     alignItems: 'center',
@@ -40,7 +40,7 @@ export const styles = StyleSheet.create({
     marginHorizontal: 4,
   },
   activeFilter: {
-    backgroundColor: '#FF5722',
+    backgroundColor: '#5E60CE',
   },
   filterText: {
     color: '#666',
@@ -62,7 +62,7 @@ export const styles = StyleSheet.create({
     marginBottom: 20,
   },
   createButton: {
-    backgroundColor: '#FF5722',
+    backgroundColor: '#5E60CE',
     paddingVertical: 12,
     paddingHorizontal: 24,
     borderRadius: 8,
@@ -146,7 +146,7 @@ export const styles = StyleSheet.create({
   },
   progressFill: {
     height: '100%',
-    backgroundColor: '#FF5722',
+    backgroundColor: '#5E60CE',
     borderRadius: 5,
   },
   progressText: {
@@ -172,7 +172,7 @@ export const styles = StyleSheet.create({
     marginLeft: 8,
   },
   timerButton: {
-    backgroundColor: '#FF5722',
+    backgroundColor: '#5E60CE',
   },
   editButton: {
     backgroundColor: '#2196F3',
@@ -264,7 +264,7 @@ export const styles = StyleSheet.create({
     fontWeight: '500',
   },
   saveButton: {
-    backgroundColor: '#FF5722',
+    backgroundColor: '#5E60CE',
   },
   saveButtonText: {
     color: '#fff',
@@ -312,7 +312,7 @@ export const styles = StyleSheet.create({
     color: '#333',
   },
   calendarViewButton: {
-    backgroundColor: '#FF5722',
+    backgroundColor: '#5E60CE',
     paddingVertical: 6,
     paddingHorizontal: 12,
     borderRadius: 16,
@@ -326,17 +326,17 @@ export const styles = StyleSheet.create({
     position: 'absolute',
     left: 20,
     bottom: 20,
-    width: 60,
-    height: 60,
-    backgroundColor: '#FF5722',
-    borderRadius: 30,
+    backgroundColor: '#5E60CE',
+    width: 56,
+    height: 56,
+    borderRadius: 28,
     justifyContent: 'center',
     alignItems: 'center',
     elevation: 5,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 3,
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
   },
   calendarModalContainer: {
     flex: 1,

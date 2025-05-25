@@ -8,10 +8,15 @@ import TabNavigator from './TabNavigator';
 // Ekranlar
 import TaskDetailScreen from '../screens/tasks/TaskDetail';
 import EditTaskScreen from '../screens/tasks/EditTask';
-import AchievementsScreen from '../screens/achievements/AchievementsScreen';
 import TimerSettingsScreen from '../screens/settings/TimerSettings';
 import NotificationsSettingsScreen from '../screens/settings/NotificationSettings';
-import CalendarEventImport from '../screens/calender/CalendarEventImport';
+
+// Auth Ekranları
+import LoginScreen from '../screens/auth/LoginScreen';
+import RegisterScreen from '../screens/auth/RegisterScreen';
+import ForgotPasswordScreen from '../screens/auth/ForgotPasswordScreen';
+import AccountSettingsScreen from '../screens/auth/AccountSettingsScreen';
+import EmailVerificationScreen from '../screens/auth/EmailVerificationScreen';
 
 // Tip tanımlamaları
 import { RootStackParamList } from './navigationTypes';
@@ -20,7 +25,7 @@ const Stack = createStackNavigator<RootStackParamList>();
 
 export const AppNavigator: React.FC = () => {
   const theme = useTheme();
-//
+
   return (
     <Stack.Navigator
       screenOptions={{
@@ -54,12 +59,6 @@ export const AppNavigator: React.FC = () => {
       />
       
       <Stack.Screen
-        name="AchievementsScreen"
-        component={AchievementsScreen}
-        options={{ title: 'Başarılar' }}
-      />
-      
-      <Stack.Screen
         name="TimerSettingsScreen"
         component={TimerSettingsScreen}
         options={{ title: 'Zamanlayıcı Ayarları' }}
@@ -70,11 +69,36 @@ export const AppNavigator: React.FC = () => {
         component={NotificationsSettingsScreen}
         options={{ title: 'Bildirim Ayarları' }}
       />
+
+      {/* Auth Ekranları */}
+      <Stack.Screen 
+        name="Login" 
+        component={LoginScreen} 
+        options={{ headerShown: false }} 
+      />
       
-      <Stack.Screen
-        name="CalendarEventImport"
-        component={CalendarEventImport}
-        options={{ title: 'Takvim Etkinlikleri' }}
+      <Stack.Screen 
+        name="Register" 
+        component={RegisterScreen} 
+        options={{ headerShown: false }} 
+      />
+      
+      <Stack.Screen 
+        name="ForgotPassword" 
+        component={ForgotPasswordScreen} 
+        options={{ headerShown: false }} 
+      />
+
+      <Stack.Screen 
+        name="AccountSettings" 
+        component={AccountSettingsScreen} 
+        options={{ headerShown: false }} 
+      />
+
+      <Stack.Screen 
+        name="EmailVerification" 
+        component={EmailVerificationScreen} 
+        options={{ headerShown: false }} 
       />
     </Stack.Navigator>
   );
