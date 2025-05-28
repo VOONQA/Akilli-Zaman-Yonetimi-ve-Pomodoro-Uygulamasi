@@ -28,7 +28,7 @@ const styles = StyleSheet.create({
   button: {
     position: 'absolute',
     right: 20,
-    bottom: 70, // Tab Navigator'ın üzerinde
+    bottom: 120, // 70'den 120'ye çıkardım
     backgroundColor: '#5E60CE',
     width: 50,
     height: 50,

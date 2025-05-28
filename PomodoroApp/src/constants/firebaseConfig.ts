@@ -4,7 +4,7 @@ import { getFirestore } from 'firebase/firestore';
 
 // Your web app's Firebase configuration
 const firebaseConfig = {
-  apiKey: "AIzaSyDRRhniUXFF0HA3V69It0FtvTkLZK2pD1s",
+  apiKey: process.env.FIREBASE_API_KEY || '',
   authDomain: "pomodoroapp-a8882.firebaseapp.com",
   projectId: "pomodoroapp-a8882",
   storageBucket: "pomodoroapp-a8882.firebasestorage.app",

@@ -14,6 +14,7 @@ import {
   Dimensions
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useChat, Message } from '../../context/ChatContext';
 import ChatMessage from './ChatMessage';
 
@@ -22,6 +23,7 @@ const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 const ChatModal: React.FC = () => {
   const { isVisible, setIsVisible, messages, sendMessage, isTyping, clearChat } = useChat();
   const [inputText, setInputText] = useState('');
+  const insets = useSafeAreaInsets();
   
   // Animasyon değerleri
   const translateY = useRef(new Animated.Value(SCREEN_HEIGHT)).current;
@@ -154,7 +156,7 @@ const ChatModal: React.FC = () => {
         {/* Mesaj giriş alanı */}
         <KeyboardAvoidingView
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-          style={styles.inputContainer}
+          style={[styles.inputContainer, { paddingBottom: Math.max(insets.bottom, 10) }]}
         >
           <TextInput
             style={styles.input}

@@ -5,6 +5,7 @@ import { useTheme } from 'react-native-paper';
 import { Platform, TouchableOpacity, View, Text } from 'react-native';
 import PagerView from 'react-native-pager-view';
 import { useNavigation } from '@react-navigation/native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 // Ekranlar
 import TimerScreen from '../screens/timer/TimerScreen';
@@ -25,6 +26,7 @@ const TabNavigator: React.FC = () => {
   const navigation = useNavigation();
   const pagerRef = useRef<PagerView>(null);
   const [currentPage, setCurrentPage] = useState(0);
+  const insets = useSafeAreaInsets();
 
   const handlePageSelected = (e: any) => {
     setCurrentPage(e.nativeEvent.position);
@@ -94,15 +96,17 @@ const TabNavigator: React.FC = () => {
         </View>
       </PagerView>
 
-      {/* Custom Tab Bar */}
+      {/* Custom Tab Bar - Safe Area ile yukarı taşındı */}
       <View style={{
-        height: TAB_BAR_HEIGHT,
+        height: TAB_BAR_HEIGHT + insets.bottom,
         backgroundColor: theme.colors.background,
         elevation: 8,
         shadowOpacity: 0.1,
         shadowRadius: 4,
         borderTopWidth: 0,
         flexDirection: 'row',
+        paddingBottom: insets.bottom, // Alt güvenli alan boşluğu
+        paddingTop: 8, // Üstten biraz boşluk
       }}>
         {screens.map((screen, index) => (
           <TouchableOpacity

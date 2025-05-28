@@ -2,7 +2,7 @@ import { YouTubeVideo, YouTubeCategories, YouTubeChannel } from '../types/youtub
 import { openDatabase } from './database';
 
 const SAVED_VIDEOS_TABLE = 'saved_youtube_videos';
-const YOUTUBE_API_KEY = 'AIzaSyCmkrADD0AF__rirkS3h4JddSRnoDOBPCQ';
+const YOUTUBE_API_KEY = process.env.YOUTUBE_API_KEY || '';
 
 // Veritabanı tablosunu oluştur
 export const initYouTubeDatabase = async (): Promise<void> => {
